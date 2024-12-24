@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     strategy:
       matrix:
@@ -27,11 +30,11 @@ jobs:
 
     - id: repo_name
       name: Prepare image tag path
-      run: echo "LOWER_GITHUB_ACTOR=${GITHUB_ACTOR,,}" >> $GITHUB_OUTPUT
+      run: echo "LOWER_GITHUB_REPOSITORY=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
       env:
-        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
 
     - name: Build and push ${{ matrix.image }}
       run: |
-        docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_ACTOR }}/${{ matrix.image }}:latest ./${{ matrix.image }}
-        docker push ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_ACTOR }}/${{ matrix.image }}:latest
+        docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./${{ matrix.image }}
+        docker push ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest
