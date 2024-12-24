@@ -27,9 +27,11 @@ jobs:
 
     - id: repo_name
       name: Prepare image tag path
-      run: echo "::set-output name=REPO_NAME::${{ github.repository }}"
+      run: echo "::set-output name=LOWER_GITHUB_REPOSITORY::${GITHUB_REPOSITORY,,}"
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
 
     - name: Build and push ${{ matrix.image }}
       run: |
-        docker build -t ghcr.io/${{ steps.repo_name.outputs.REPO_NAME }}/${{ matrix.image }}:latest ./${{ matrix.image }}
-        docker push ghcr.io/${{ steps.repo_name.outputs.REPO_NAME }}/${{ matrix.image }}:latest
+        docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./${{ matrix.image }}
+        docker push ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest
