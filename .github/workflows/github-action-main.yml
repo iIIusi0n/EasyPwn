@@ -25,7 +25,11 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - id: repo_name
+      name: Prepare image tag path
+      run: echo "::set-output name=REPO_NAME::${{ github.repository }}"
+
     - name: Build and push ${{ matrix.image }}
       run: |
-        docker build -t ghcr.io/${{ github.repository }}/${{ matrix.image }}:latest ./${{ matrix.image }}
-        docker push ghcr.io/${{ github.repository }}/${{ matrix.image }}:latest
+        docker build -t ghcr.io/${{ steps.repo_name.outputs.REPO_NAME }}/${{ matrix.image }}:latest ./${{ matrix.image }}
+        docker push ghcr.io/${{ steps.repo_name.outputs.REPO_NAME }}/${{ matrix.image }}:latest
