@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         image:
-          - easypwn-ping
+          - ping
 
     steps:
     - name: Checkout Code
@@ -36,5 +36,5 @@ jobs:
 
     - name: Build and push ${{ matrix.image }}
       run: |
-        docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./${{ matrix.image }}
+        docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./cmd/${{ matrix.image }}
         docker push ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest

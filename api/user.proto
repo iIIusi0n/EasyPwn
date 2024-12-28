@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package easypwn;
+
+option go_package = "easypwn/internal/api";
+
+service User {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+}
+
+message CreateUserRequest {
+    string email = 1;
+    string username = 2;
+    string password = 3;
+}
+
+message CreateUserResponse {
+    string user_id = 1;
+}
