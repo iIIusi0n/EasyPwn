@@ -1,4 +1,4 @@
-.PHONY: proto images test
+.PHONY: proto images test 
 
 proto:
 	protoc --go_out=internal \

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	listenPort = os.Getenv("LISTEN_PORT")
+	listenPort = os.Getenv("USER_LISTEN_PORT")
 )
 
 func init() {

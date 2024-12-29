@@ -17,6 +17,8 @@ var (
 func init() {
 	dbUrl, exists := os.LookupEnv("DATABASE_URL")
 	if !exists {
+		log.Println("DATABASE_URL is not set, running in test mode")
+
 		var err error
 		db, err = sql.Open("sqlite3", ":memory:")
 		if err != nil {
