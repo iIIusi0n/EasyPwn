@@ -5,7 +5,21 @@ package easypwn;
 option go_package = "easypwn/internal/api";
 
 service User {
+    rpc AuthLogin(AuthLoginRequest) returns (AuthLoginResponse) {}
+
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+    rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
+}
+
+message AuthLoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message AuthLoginResponse {
+    string user_id = 1;
 }
 
 message CreateUserRequest {
@@ -15,5 +29,36 @@ message CreateUserRequest {
 }
 
 message CreateUserResponse {
+    string user_id = 1;
+}
+
+message GetUserRequest {
+    string user_id = 1;
+}
+
+message GetUserResponse {
+    string user_id = 1;
+    string email = 2;
+    string username = 3;
+    string license_type = 4;
+}
+
+message UpdateUserRequest {
+    string user_id = 1;
+    string email = 2;
+    string username = 3;
+    string password = 4;
+    string license_type = 5;
+}
+
+message UpdateUserResponse {
+    string user_id = 1;
+}
+
+message DeleteUserRequest {
+    string user_id = 1;
+}
+
+message DeleteUserResponse {
     string user_id = 1;
 }
