@@ -1,7 +1,6 @@
 package instance
 
 import (
-	"bytes"
 	"context"
 	"easypwn/assets/images"
 	"easypwn/internal/utils"
@@ -28,12 +27,13 @@ func init() {
 }
 
 func initDockerDaemon(host string) {
-	cli, err := client.NewClientWithOpts(client.WithHost(host))
+	ctx := context.Background()
+
+	cli, err := newDockerClient(host)
 	if err != nil {
 		log.Fatal("Failed to create Docker client: ", err)
 	}
 
-	ctx := context.Background()
 	_, err = cli.Ping(ctx)
 	if err != nil {
 		log.Fatal("Docker daemon is not running: ", err)
@@ -52,9 +52,18 @@ func initImages() {
 			log.Fatal("Failed to read Dockerfile: ", err)
 		}
 
-		cli.ImageBuild(context.Background(), bytes.NewReader(dockerfile), types.ImageBuildOptions{
+		dockerfileTar, err := utils.CreateDockerfileTar(file.Name(), dockerfile)
+		if err != nil {
+			log.Fatal("Failed to create Dockerfile tar: ", err)
+		}
+
+		err = buildDockerImage(context.Background(), cli, dockerfileTar, types.ImageBuildOptions{
 			Dockerfile: file.Name(),
 			Tags:       []string{utils.DockerfileToImageName(file.Name())},
+			Remove:     true,
 		})
+		if err != nil {
+			log.Fatal("Failed to build image: ", err)
+		}
 	}
 }

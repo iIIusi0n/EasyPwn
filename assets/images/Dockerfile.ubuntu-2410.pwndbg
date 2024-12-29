@@ -5,9 +5,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     gdb \
     python3 \
-    python3-pip \
-    vim \
-    && python3 -m pip install pwntools
+    python3-pwntools \
+    vim 
 
 # install pwndbg
 RUN wget https://github.com/pwndbg/pwndbg/releases/download/2024.08.29/pwndbg_2024.08.29_amd64.deb

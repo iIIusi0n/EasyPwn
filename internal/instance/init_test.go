@@ -1,14 +1,12 @@
 package instance
 
 import (
-	"bytes"
 	"context"
 	"easypwn/assets/images"
+	"easypwn/internal/utils"
 	"testing"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
 )
 
 func TestEmbeddedDockerfiles(t *testing.T) {
@@ -22,7 +20,6 @@ func TestEmbeddedDockerfiles(t *testing.T) {
 		if err != nil {
 			t.Fatal("Failed to read Dockerfile: ", err)
 		}
-
 		t.Logf("Read Dockerfile: %s", file.Name())
 	}
 }
@@ -33,34 +30,36 @@ func TestBuildImage(t *testing.T) {
 		t.Fatal("Failed to read Dockerfile: ", err)
 	}
 
-	cli, err := client.NewClientWithOpts(client.WithHost("unix:///var/run/docker.sock"))
+	ctx := context.Background()
+	cli, err := newDockerClient("unix:///var/run/docker.sock")
 	if err != nil {
 		t.Fatal("Failed to create Docker client: ", err)
 	}
 
-	ctx := context.Background()
 	_, err = cli.Ping(ctx)
 	if err != nil {
 		t.Fatal("Docker daemon is not running: ", err)
 	}
 
-	_, err = cli.ImageBuild(ctx, bytes.NewReader(dockerfile), types.ImageBuildOptions{
+	dockerfileTar, err := utils.CreateDockerfileTar("Dockerfile.ubuntu-2410.gef", dockerfile)
+	if err != nil {
+		t.Fatal("Failed to create Dockerfile tar: ", err)
+	}
+
+	imageName := "easypwn/ubuntu-2410/gef"
+	err = buildDockerImage(ctx, cli, dockerfileTar, types.ImageBuildOptions{
 		Dockerfile: "Dockerfile.ubuntu-2410.gef",
-		Tags:       []string{"easypwn/ubuntu-2410/gef"},
+		Tags:       []string{imageName},
+		Remove:     true,
 	})
 	if err != nil {
 		t.Fatal("Failed to build image: ", err)
 	}
-
 	t.Log("Image built successfully")
 
-	_, err = cli.ImageRemove(ctx, "easypwn/ubuntu-2410/gef", image.RemoveOptions{
-		Force:         true,
-		PruneChildren: true,
-	})
+	err = removeDockerImage(ctx, cli, imageName)
 	if err != nil {
 		t.Fatal("Failed to remove image: ", err)
 	}
-
 	t.Log("Image removed successfully")
 }
