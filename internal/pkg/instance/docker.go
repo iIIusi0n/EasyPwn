@@ -99,3 +99,9 @@ func createContainer(ctx context.Context, cli *client.Client, containerName, ima
 	}
 	return resp.ID, nil
 }
+
+func removeContainer(ctx context.Context, cli *client.Client, containerID string) error {
+	return cli.ContainerRemove(ctx, containerID, container.RemoveOptions{
+		Force: true,
+	})
+}

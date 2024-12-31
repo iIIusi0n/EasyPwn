@@ -84,9 +84,13 @@ func TestCreateContainer(t *testing.T) {
 		t.Fatal("Failed to create Docker client: ", err)
 	}
 
-	containerID, err := createContainer(ctx, cli, "easypwn-test", "easypwn/ubuntu-2410/pwndbg", "/work")
+	containerID, err := createContainer(ctx, cli, "test-container", "scratch", "")
 	if err != nil {
 		t.Fatal("Failed to create container: ", err)
 	}
-	t.Logf("Container created successfully: %s", containerID)
+
+	err = removeContainer(ctx, cli, containerID)
+	if err != nil {
+		t.Fatal("Failed to remove container: ", err)
+	}
 }
