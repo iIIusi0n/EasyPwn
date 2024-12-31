@@ -25,11 +25,32 @@ CREATE TABLE IF NOT EXISTS user_license_type (
 INSERT INTO user_license_type (name) VALUES ('free');
 INSERT INTO user_license_type (name) VALUES ('paid');
 
+CREATE TABLE IF NOT EXISTS project_os (
+    id UUID PRIMARY KEY DEFAULT UUID(),
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO project_os (name) VALUES ('ubuntu-2410');
+
+CREATE TABLE IF NOT EXISTS project_plugin (
+    id UUID PRIMARY KEY DEFAULT UUID(),
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO project_plugin (name) VALUES ('gef');
+INSERT INTO project_plugin (name) VALUES ('pwndbg');
+
 CREATE TABLE IF NOT EXISTS project (
     id UUID PRIMARY KEY DEFAULT UUID(),
     name VARCHAR(255) NOT NULL,
     user_id UUID NOT NULL REFERENCES user(id),
     file_path VARCHAR(255) NOT NULL,
+    os_id UUID NOT NULL REFERENCES project_os(id),
+    plugin_id UUID NOT NULL REFERENCES project_plugin(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -38,6 +59,14 @@ CREATE TABLE IF NOT EXISTS instance (
     id UUID PRIMARY KEY DEFAULT UUID(),
     project_id UUID NOT NULL REFERENCES project(id),
     container_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS instance_log (
+    id UUID PRIMARY KEY DEFAULT UUID(),
+    instance_id UUID NOT NULL REFERENCES instance(id),
+    log TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

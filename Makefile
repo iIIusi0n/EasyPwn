@@ -28,3 +28,12 @@ testfunc:
 		exit 1; \
 	fi
 	go test -v ./... -run $(func)
+
+# count lines per file extension
+lines:
+	@echo "Lines of code by extension:"
+	@for ext in $$(find . -type f -name "*.*" | grep -v "/\." | sed 's/.*\.//' | sort | uniq); do \
+		echo "$$ext $$(find . -type f -name "*.$$ext" | grep -v "/\." | xargs wc -l 2>/dev/null | tail -n1 | awk '{print $$1}')" >> /tmp/lines.tmp; \
+	done
+	@sort -k2 -nr /tmp/lines.tmp | sed 's/\([^ ]*\) \([0-9]*\)/\1: \2/'
+	@rm /tmp/lines.tmp

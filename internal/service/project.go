@@ -25,7 +25,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *pb.CreateProjec
 	defer tx.Rollback()
 
 	var projectID string
-	result := tx.QueryRow("INSERT INTO project (name, user_id, file_path) VALUES (?, ?, ?) RETURNING id", req.Name, req.UserId, req.FilePath)
+	result := tx.QueryRow("INSERT INTO project (name, user_id, file_path, os_id, plugin_id) VALUES (?, ?, ?, ?, ?) RETURNING id", req.Name, req.UserId, req.FilePath, req.Os, req.Plugin)
 	err = result.Scan(&projectID)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (s *ProjectService) GetProject(ctx context.Context, req *pb.GetProjectReque
 	db := data.GetDB()
 
 	var project pb.GetProjectResponse
-	err := db.QueryRow("SELECT id, name, user_id, file_path FROM project WHERE id = ?", req.ProjectId).Scan(&project.ProjectId, &project.Name, &project.UserId, &project.FilePath)
+	err := db.QueryRow("SELECT id, name, user_id, file_path, os_id, plugin_id FROM project WHERE id = ?", req.ProjectId).Scan(&project.ProjectId, &project.Name, &project.UserId, &project.FilePath, &project.Os, &project.Plugin)
 	if err != nil {
 		return nil, err
 	}
