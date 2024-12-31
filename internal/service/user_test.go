@@ -150,3 +150,15 @@ func TestAuthLogin(t *testing.T) {
 		return
 	}
 }
+
+func TestDeleteNonExistentUser(t *testing.T) {
+	userService := NewUserService(context.Background())
+
+	_, err := userService.DeleteUser(context.Background(), &pb.DeleteUserRequest{
+		UserId: "non-existent-id",
+	})
+
+	if err == nil {
+		t.Error("DeleteUser() expected error for non-existent user, got nil")
+	}
+}

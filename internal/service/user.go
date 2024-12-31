@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	pb "easypwn/internal/api"
 	"easypwn/internal/data"
@@ -136,9 +137,18 @@ func (s *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest)
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("DELETE FROM user WHERE id = ?", req.UserId)
+	result, err := tx.Exec("DELETE FROM user WHERE id = ?", req.UserId)
 	if err != nil {
 		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
+	if rowsAffected == 0 {
+		return nil, fmt.Errorf("user not found")
 	}
 
 	if err = tx.Commit(); err != nil {
