@@ -2,12 +2,15 @@ package instance
 
 import (
 	"context"
+	"io"
+	"os"
 	"testing"
 
 	"easypwn/assets/images"
 	"easypwn/internal/util"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 )
 
 func TestBuildImage(t *testing.T) {
@@ -84,7 +87,23 @@ func TestCreateContainer(t *testing.T) {
 		t.Fatal("Failed to create Docker client: ", err)
 	}
 
-	containerID, err := createContainer(ctx, cli, "test-container", "scratch", "")
+	reader, err := cli.ImagePull(ctx, "busybox", image.PullOptions{})
+	if err != nil {
+		t.Fatal("Failed to pull image: ", err)
+	}
+	defer reader.Close()
+
+	io.Copy(os.Stdout, reader)
+	t.Log("Image pulled successfully")
+
+	tempDir, err := os.MkdirTemp("", "easypwn-test-*")
+	if err != nil {
+		t.Fatal("Failed to create temp dir: ", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	containerID, err := createContainer(ctx, cli, "easypwn-test-container", "busybox", tempDir)
+
 	if err != nil {
 		t.Fatal("Failed to create container: ", err)
 	}
