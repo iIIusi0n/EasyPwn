@@ -5,7 +5,7 @@ import (
 
 	pb "easypwn/internal/api"
 	"easypwn/internal/data"
-	"easypwn/internal/utils"
+	"easypwn/internal/util"
 )
 
 type UserService struct {
@@ -17,7 +17,7 @@ func NewUserService(ctx context.Context) *UserService {
 }
 
 func (s *UserService) AuthLogin(ctx context.Context, req *pb.AuthLoginRequest) (*pb.AuthLoginResponse, error) {
-	passwordHash := utils.HashPassword(req.Password)
+	passwordHash := util.HashPassword(req.Password)
 
 	db := data.GetDB()
 
@@ -34,7 +34,7 @@ func (s *UserService) AuthLogin(ctx context.Context, req *pb.AuthLoginRequest) (
 }
 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	passwordHash := utils.HashPassword(req.Password)
+	passwordHash := util.HashPassword(req.Password)
 
 	db := data.GetDB()
 
@@ -111,7 +111,7 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	}
 
 	if req.Password != "" {
-		passwordHash := utils.HashPassword(req.Password)
+		passwordHash := util.HashPassword(req.Password)
 		_, err = tx.Exec("UPDATE user SET password_hash = ? WHERE id = ?", passwordHash, req.UserId)
 		if err != nil {
 			return nil, err

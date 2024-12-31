@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 )
@@ -60,4 +61,41 @@ func removeDockerImage(ctx context.Context, cli *client.Client, imageID string) 
 		PruneChildren: true,
 	})
 	return err
+}
+
+func getImages(ctx context.Context, cli *client.Client) ([]image.Summary, error) {
+	images, err := cli.ImageList(ctx, image.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+func getImageNames(ctx context.Context, cli *client.Client) ([]string, error) {
+	images, err := getImages(ctx, cli)
+	if err != nil {
+		return nil, err
+	}
+
+	imageNames := make([]string, len(images))
+	for i, image := range images {
+		imageNames[i] = image.RepoTags[0]
+	}
+	return imageNames, nil
+}
+
+func createContainer(ctx context.Context, cli *client.Client, containerName, imageName, workPath string) (string, error) {
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: imageName,
+		Cmd:   []string{"/bin/bash"},
+	}, &container.HostConfig{
+		Binds: []string{
+			fmt.Sprintf("%s:/work", workPath),
+		},
+	}, nil, nil, containerName)
+	if err != nil {
+		return "", err
+	}
+	return resp.ID, nil
 }

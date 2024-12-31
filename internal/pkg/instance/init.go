@@ -3,7 +3,7 @@ package instance
 import (
 	"context"
 	"easypwn/assets/images"
-	"easypwn/internal/utils"
+	"easypwn/internal/util"
 	"log"
 	"os"
 
@@ -52,14 +52,14 @@ func initImages() {
 			log.Fatal("Failed to read Dockerfile: ", err)
 		}
 
-		dockerfileTar, err := utils.CreateDockerfileTar(file.Name(), dockerfile)
+		dockerfileTar, err := util.CreateDockerfileTar(file.Name(), dockerfile)
 		if err != nil {
 			log.Fatal("Failed to create Dockerfile tar: ", err)
 		}
 
 		err = buildDockerImage(context.Background(), cli, dockerfileTar, types.ImageBuildOptions{
 			Dockerfile: file.Name(),
-			Tags:       []string{utils.DockerfileToImageName(file.Name())},
+			Tags:       []string{util.DockerfileToImageName(file.Name())},
 			Remove:     true,
 		})
 		if err != nil {
