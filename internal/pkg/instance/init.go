@@ -28,7 +28,8 @@ func init() {
 func initDockerDaemon(host string) {
 	ctx := context.Background()
 
-	cli, err := newDockerClient(host)
+	var err error
+	cli, err = newDockerClient(host)
 	if err != nil {
 		log.Fatal("Failed to create Docker client: ", err)
 	}
