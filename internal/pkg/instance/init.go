@@ -3,7 +3,7 @@ package instance
 import (
 	"context"
 	"easypwn/assets/images"
-	"easypwn/internal/util"
+	"easypwn/internal/pkg/util"
 	"log"
 	"os"
 
@@ -18,8 +18,7 @@ var (
 func init() {
 	host, exists := os.LookupEnv("DOCKER_HOST")
 	if !exists {
-		log.Println("DOCKER_HOST is not set, running in test mode")
-		return
+		host = "unix:///var/run/docker.sock"
 	}
 
 	initDockerDaemon(host)
@@ -46,7 +45,23 @@ func initImages() {
 		log.Fatal("Failed to read Dockerfiles: ", err)
 	}
 
+	imageNames, err := getImageNames(context.Background(), cli)
+	if err != nil {
+		log.Fatal("Failed to get image names: ", err)
+	}
+
 	for _, file := range files {
+		found := false
+		for _, tag := range imageNames {
+			if tag == util.DockerfileToImageName(file.Name()) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			continue
+		}
+
 		dockerfile, err := images.Dockerfiles.ReadFile(file.Name())
 		if err != nil {
 			log.Fatal("Failed to read Dockerfile: ", err)

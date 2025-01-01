@@ -85,7 +85,7 @@ func getImageNames(ctx context.Context, cli *client.Client) ([]string, error) {
 	return imageNames, nil
 }
 
-func createContainer(ctx context.Context, cli *client.Client, containerName, imageName, workPath string) (string, error) {
+func createContainer(ctx context.Context, cli *client.Client, containerName, imageName, workPath string, autoRemove bool) (string, error) {
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
 		Cmd:   []string{"/bin/bash"},
@@ -93,11 +93,20 @@ func createContainer(ctx context.Context, cli *client.Client, containerName, ima
 		Binds: []string{
 			fmt.Sprintf("%s:/work", workPath),
 		},
+		AutoRemove: autoRemove,
 	}, nil, nil, containerName)
 	if err != nil {
 		return "", err
 	}
 	return resp.ID, nil
+}
+
+func startContainer(ctx context.Context, cli *client.Client, containerID string) error {
+	return cli.ContainerStart(ctx, containerID, container.StartOptions{})
+}
+
+func stopContainer(ctx context.Context, cli *client.Client, containerID string) error {
+	return cli.ContainerStop(ctx, containerID, container.StopOptions{})
 }
 
 func removeContainer(ctx context.Context, cli *client.Client, containerID string) error {

@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package easypwn;
+
+option go_package = "easypwn/internal/api";
+
+service Instance {
+    rpc CreateInstance(CreateInstanceRequest) returns (CreateInstanceResponse) {}
+    rpc GetInstance(GetInstanceRequest) returns (GetInstanceResponse) {}
+    rpc DeleteInstance(DeleteInstanceRequest) returns (DeleteInstanceResponse) {}
+    rpc GetInstanceLogs(GetInstanceLogsRequest) returns (GetInstanceLogsResponse) {}
+}
+
+message CreateInstanceRequest {
+    string project_id = 1;
+}
+
+message CreateInstanceResponse {
+    string instance_id = 1;
+}
+
+message GetInstanceRequest {
+    string instance_id = 1;
+}
+
+message GetInstanceResponse {
+    string instance_id = 1;
+    string project_id = 2;
+    string container_id = 3;
+}
+
+message DeleteInstanceRequest {
+    string instance_id = 1;
+}
+
+message DeleteInstanceResponse {
+    string instance_id = 1;
+}
+
+message GetInstanceLogsRequest {
+    string instance_id = 1;
+    int32 limit = 2;
+}
+
+message GetInstanceLogsResponse {
+    string logs = 1;
+}

@@ -2,15 +2,13 @@ package instance
 
 import (
 	"context"
-	"io"
 	"os"
 	"testing"
 
 	"easypwn/assets/images"
-	"easypwn/internal/util"
+	"easypwn/internal/pkg/util"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/image"
 )
 
 func TestBuildImage(t *testing.T) {
@@ -30,7 +28,7 @@ func TestBuildImage(t *testing.T) {
 		t.Fatal("Failed to create Dockerfile tar: ", err)
 	}
 
-	imageName := "easypwn/ubuntu-2410/gef"
+	imageName := "easypwn/ubuntu-2410:gef"
 	err = buildDockerImage(ctx, cli, dockerfileTar, types.ImageBuildOptions{
 		Dockerfile: "Dockerfile.ubuntu-2410.gef",
 		Tags:       []string{imageName},
@@ -87,25 +85,20 @@ func TestCreateContainer(t *testing.T) {
 		t.Fatal("Failed to create Docker client: ", err)
 	}
 
-	reader, err := cli.ImagePull(ctx, "busybox", image.PullOptions{})
-	if err != nil {
-		t.Fatal("Failed to pull image: ", err)
-	}
-	defer reader.Close()
-
-	io.Copy(os.Stdout, reader)
-	t.Log("Image pulled successfully")
-
 	tempDir, err := os.MkdirTemp("", "easypwn-test-*")
 	if err != nil {
 		t.Fatal("Failed to create temp dir: ", err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	containerID, err := createContainer(ctx, cli, "easypwn-test-container", "busybox", tempDir)
-
+	containerID, err := createContainer(ctx, cli, "easypwn-test-container", "easypwn/ubuntu-2410:gef", tempDir, true)
 	if err != nil {
 		t.Fatal("Failed to create container: ", err)
+	}
+
+	err = startContainer(ctx, cli, containerID)
+	if err != nil {
+		t.Fatal("Failed to start container: ", err)
 	}
 
 	err = removeContainer(ctx, cli, containerID)

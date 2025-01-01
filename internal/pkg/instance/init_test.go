@@ -1,21 +1,23 @@
 package instance
 
 import (
-	"easypwn/assets/images"
+	"context"
 	"testing"
 )
 
-func TestEmbeddedDockerfiles(t *testing.T) {
-	files, err := images.Dockerfiles.ReadDir(".")
+func TestInitImages(t *testing.T) {
+	imageNames, err := getImageNames(context.Background(), cli)
 	if err != nil {
-		t.Fatal("Failed to read Dockerfiles: ", err)
+		t.Fatal("Failed to get image names: ", err)
 	}
 
-	for _, file := range files {
-		_, err := images.Dockerfiles.ReadFile(file.Name())
-		if err != nil {
-			t.Fatal("Failed to read Dockerfile: ", err)
+	t.Logf("Found %d images", len(imageNames))
+
+	for _, imageName := range imageNames {
+		if imageName == "easypwn/ubuntu-2410:gef" {
+			return
 		}
-		t.Logf("Read Dockerfile: %s", file.Name())
 	}
+
+	t.Fatal("Image not found")
 }

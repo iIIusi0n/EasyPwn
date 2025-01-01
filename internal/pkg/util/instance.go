@@ -3,13 +3,15 @@ package util
 import (
 	"archive/tar"
 	"bytes"
+	"crypto/rand"
 	"fmt"
+	"log"
 	"strings"
 )
 
 func DockerfileToImageName(dockerfile string) string {
 	words := strings.Split(dockerfile, ".")
-	return fmt.Sprintf("easypwn/%s/%s", words[1], words[2])
+	return fmt.Sprintf("easypwn/%s:%s", words[1], words[2])
 }
 
 func CreateDockerfileTar(filename string, content []byte) (*bytes.Reader, error) {
@@ -31,4 +33,12 @@ func CreateDockerfileTar(filename string, content []byte) (*bytes.Reader, error)
 	}
 
 	return bytes.NewReader(buf.Bytes()), nil
+}
+
+func CreateInstanceName() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		log.Fatalf("failed to generate random bytes: %v", err)
+	}
+	return fmt.Sprintf("easypwn-instance-%x", b)
 }

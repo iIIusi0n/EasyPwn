@@ -4,7 +4,7 @@ import (
 	"context"
 	pb "easypwn/internal/api"
 	"easypwn/internal/data"
-	"fmt"
+	"easypwn/internal/pkg/project"
 )
 
 type ProjectService struct {
@@ -18,62 +18,42 @@ func NewProjectService(ctx context.Context) *ProjectService {
 func (s *ProjectService) CreateProject(ctx context.Context, req *pb.CreateProjectRequest) (*pb.CreateProjectResponse, error) {
 	db := data.GetDB()
 
-	tx, err := db.Begin()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	var projectID string
-	result := tx.QueryRow("INSERT INTO project (name, user_id, file_path, os_id, plugin_id) VALUES (?, ?, ?, ?, ?) RETURNING id", req.Name, req.UserId, req.FilePath, req.Os, req.Plugin)
-	err = result.Scan(&projectID)
+	project, err := project.NewProject(ctx, db, req.Name, req.UserId, req.FilePath, req.Os, req.Plugin)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = tx.Commit(); err != nil {
-		return nil, err
-	}
-
-	return &pb.CreateProjectResponse{ProjectId: projectID}, nil
+	return &pb.CreateProjectResponse{ProjectId: project.ID}, nil
 }
 
 func (s *ProjectService) GetProject(ctx context.Context, req *pb.GetProjectRequest) (*pb.GetProjectResponse, error) {
 	db := data.GetDB()
 
-	var project pb.GetProjectResponse
-	err := db.QueryRow("SELECT id, name, user_id, file_path, os_id, plugin_id FROM project WHERE id = ?", req.ProjectId).Scan(&project.ProjectId, &project.Name, &project.UserId, &project.FilePath, &project.Os, &project.Plugin)
+	project, err := project.GetProject(ctx, db, req.ProjectId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &project, nil
+	return &pb.GetProjectResponse{
+		ProjectId: project.ID,
+		Name:      project.Name,
+		UserId:    project.UserID,
+		FilePath:  project.FilePath,
+		Os:        project.OsID,
+		Plugin:    project.PluginID,
+	}, nil
 }
 
 func (s *ProjectService) DeleteProject(ctx context.Context, req *pb.DeleteProjectRequest) (*pb.DeleteProjectResponse, error) {
 	db := data.GetDB()
 
-	tx, err := db.Begin()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	result, err := tx.Exec("DELETE FROM project WHERE id = ?", req.ProjectId)
+	project, err := project.GetProject(ctx, db, req.ProjectId)
 	if err != nil {
 		return nil, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	err = project.Delete(ctx, db)
 	if err != nil {
-		return nil, err
-	}
-
-	if rowsAffected == 0 {
-		return nil, fmt.Errorf("project not found")
-	}
-
-	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
 
