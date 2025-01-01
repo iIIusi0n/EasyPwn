@@ -43,8 +43,8 @@ jobs:
     - name: Build and push ${{ matrix.image }}
       run: |
         if [ "${{ matrix.image }}" = "web" ]; then
-          docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./web
+          docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest -f web/Dockerfile .
         else
-          docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./cmd/${{ matrix.image }}
+          docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest -f cmd/${{ matrix.image }}/Dockerfile .
         fi
         docker push ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest
