@@ -16,6 +16,7 @@ images:
 			docker build -f cmd/$$service/Dockerfile -t easypwn/$$service .; \
 		fi \
 	done
+	docker build -f web/Dockerfile -t easypwn/web .
 
 # run tests
 test:
