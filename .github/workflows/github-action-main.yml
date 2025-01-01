@@ -15,7 +15,10 @@ jobs:
     strategy:
       matrix:
         image:
-          - ping
+          - instance-service
+          - project-service
+          - user-service
+          - web
 
     steps:
     - name: Checkout Code
@@ -52,5 +55,9 @@ jobs:
 
     - name: Build and push ${{ matrix.image }}
       run: |
-        docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./cmd/${{ matrix.image }}
+        if [ "${{ matrix.image }}" = "web" ]; then
+          docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./web
+        else
+          docker build -t ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest ./cmd/${{ matrix.image }}
+        fi
         docker push ghcr.io/${{ steps.repo_name.outputs.LOWER_GITHUB_REPOSITORY }}/${{ matrix.image }}:latest

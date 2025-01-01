@@ -22,7 +22,7 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/i',
-      builder: (context, state) => const InstancesPage(),
+      builder: (context, state) => const InstancePage(id: 'test'),
     ),
     GoRoute(
       path: '/i/:id',

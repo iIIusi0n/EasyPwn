@@ -169,16 +169,16 @@ class _InstancePageState extends State<InstancePage> with SingleTickerProviderSt
                                   indicatorWeight: 2,
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   tabs: const [
-                                    Tab(text: 'Console'),
-                                    Tab(text: 'Python'),
+                                    Tab(text: 'Debugger'),
+                                    Tab(text: 'Shell'),
                                   ],
                                 ),
                                 Expanded(
                                   child: TabBarView(
                                     controller: _tabController,
                                     children: [
-                                      _buildConsoleTab(),
-                                      _buildPythonTab(),
+                                      _buildDebuggerTab(),
+                                      _buildDebuggerTab(),
                                     ],
                                   ),
                                 ),
@@ -301,7 +301,7 @@ class _InstancePageState extends State<InstancePage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildConsoleTab() {
+  Widget _buildDebuggerTab() {
     return Stack(
       children: [
         Container(
@@ -312,7 +312,7 @@ class _InstancePageState extends State<InstancePage> with SingleTickerProviderSt
             autofocus: true,
             backgroundOpacity: 0.7,
             textStyle: TerminalStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontFamily: GoogleFonts.robotoMono().fontFamily!,
             ),
             onSecondaryTapDown: (details, offset) async {
@@ -395,29 +395,6 @@ class _InstancePageState extends State<InstancePage> with SingleTickerProviderSt
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildPythonTab() {
-    return Container(
-      color: AppColors.surfaceDark,
-      child: TextField(
-        controller: _chatController,
-        focusNode: _chatFocusNode,
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: GoogleFonts.robotoMono().fontFamily,
-        ),
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Enter Python code...',
-          hintStyle: TextStyle(color: Colors.grey),
-          fillColor: AppColors.surfaceDark,
-          filled: true,
-        ),
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-      ),
     );
   }
 }
