@@ -14,7 +14,7 @@ RUN flutter doctor
 RUN flutter config --enable-web
 
 WORKDIR /app
-COPY . .
+COPY web .
 
 RUN flutter pub get
 RUN flutter build web --release
@@ -23,6 +23,6 @@ FROM nginx:1.27.3-alpine3.20
 
 COPY --from=builder /app/build/web /usr/share/nginx/html
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY assets/nginx.conf /etc/nginx/nginx.conf
 
 CMD ["nginx", "-g", "daemon off;"] 
