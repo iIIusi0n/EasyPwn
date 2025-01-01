@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package easypwn;
+
+option go_package = "easypwn/internal/api";
+
+service Project {
+    rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {}
+    rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {}
+    rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse) {}
+}
+
+message CreateProjectRequest {
+    string name = 1;
+    string user_id = 2;
+    string file_path = 3;
+    string os = 4;
+    string plugin = 5;
+}
+
+message CreateProjectResponse {
+    string project_id = 1;
+}
+
+message GetProjectRequest {
+    string project_id = 1;
+}
+
+message GetProjectResponse {
+    string project_id = 1;
+    string name = 2;
+    string user_id = 3;
+    string file_path = 4;
+    string os = 5;
+    string plugin = 6;
+}
+
+message DeleteProjectRequest {
+    string project_id = 1;
+}
+
+message DeleteProjectResponse {
+    string project_id = 1;
+}
