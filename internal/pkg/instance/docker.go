@@ -78,9 +78,9 @@ func getImageNames(ctx context.Context, cli *client.Client) ([]string, error) {
 		return nil, err
 	}
 
-	imageNames := make([]string, len(images))
-	for i, image := range images {
-		imageNames[i] = image.RepoTags[0]
+	var imageNames []string
+	for _, image := range images {
+		imageNames = append(imageNames, image.RepoTags...)
 	}
 	return imageNames, nil
 }

@@ -36,11 +36,9 @@ func (s *UserService) AuthLogin(ctx context.Context, req *pb.AuthLoginRequest) (
 }
 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	passwordHash := util.HashPassword(req.Password)
-
 	db := data.GetDB()
 
-	user, err := user.NewUser(ctx, db, req.Email, req.Username, passwordHash)
+	user, err := user.NewUser(ctx, db, req.Email, req.Username, req.Password)
 	if err != nil {
 		return nil, err
 	}

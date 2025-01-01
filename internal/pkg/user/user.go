@@ -44,7 +44,14 @@ func NewUser(ctx context.Context, db *sql.DB, email, username, password string) 
 		return nil, err
 	}
 
-	return &User{ID: userId}, nil
+	return &User{
+		ID:        userId,
+		Email:     email,
+		Username:  username,
+		Password:  passwordHash,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}, nil
 }
 
 func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {

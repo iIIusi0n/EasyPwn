@@ -36,12 +36,14 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, osID, p
 	}
 
 	return &Project{
-		ID:       projectID,
-		Name:     name,
-		UserID:   userID,
-		FilePath: filePath,
-		OsID:     osID,
-		PluginID: pluginID,
+		ID:        projectID,
+		Name:      name,
+		UserID:    userID,
+		FilePath:  filePath,
+		OsID:      osID,
+		PluginID:  pluginID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil
 }
 

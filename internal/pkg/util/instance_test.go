@@ -11,11 +11,11 @@ func TestDockerfileToImageName(t *testing.T) {
 	}{
 		{
 			dockerfile: "Dockerfile.ubuntu-2410.gef",
-			want:       "easypwn/ubuntu-2410/gef",
+			want:       "easypwn/ubuntu-2410:gef",
 		},
 		{
 			dockerfile: "Dockerfile.ubuntu-2410.pwndbg",
-			want:       "easypwn/ubuntu-2410/pwndbg",
+			want:       "easypwn/ubuntu-2410:pwndbg",
 		},
 	}
 

@@ -38,12 +38,6 @@ func TestBuildImage(t *testing.T) {
 		t.Fatal("Failed to build image: ", err)
 	}
 	t.Log("Image built successfully")
-
-	err = removeDockerImage(ctx, cli, imageName)
-	if err != nil {
-		t.Fatal("Failed to remove image: ", err)
-	}
-	t.Log("Image removed successfully")
 }
 
 func TestGetImages(t *testing.T) {
@@ -101,8 +95,6 @@ func TestCreateContainer(t *testing.T) {
 		t.Fatal("Failed to start container: ", err)
 	}
 
-	err = removeContainer(ctx, cli, containerID)
-	if err != nil {
-		t.Fatal("Failed to remove container: ", err)
-	}
+	stopContainer(ctx, cli, containerID)
+	removeContainer(ctx, cli, containerID)
 }

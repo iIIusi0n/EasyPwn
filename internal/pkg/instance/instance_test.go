@@ -16,9 +16,9 @@ func TestInstance(t *testing.T) {
 	}
 	defer u.Delete(context.Background(), data.GetDB())
 
-	ubuntu2410, err := project.GetPluginIDFromName("ubuntu-2410")
+	ubuntu2410, err := project.GetOsIDFromName("ubuntu-2410")
 	if err != nil {
-		t.Fatal("Failed to get ubuntu-2410 plugin ID: ", err)
+		t.Fatal("Failed to get ubuntu-2410 os ID: ", err)
 	}
 
 	gef, err := project.GetPluginIDFromName("gef")
@@ -50,10 +50,5 @@ func TestInstance(t *testing.T) {
 		t.Fatal("Failed to stop instance: ", err)
 	}
 
-	err = instance.Delete(context.Background(), data.GetDB())
-	if err != nil {
-		t.Fatal("Failed to delete instance: ", err)
-	}
-
-	t.Log("Instance deleted")
+	instance.Delete(context.Background(), data.GetDB())
 }

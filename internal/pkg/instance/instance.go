@@ -18,15 +18,25 @@ type Instance struct {
 }
 
 func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, error) {
-	project, err := project.GetProject(ctx, db, projectID)
+	proj, err := project.GetProject(ctx, db, projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	imageName := fmt.Sprintf("easypwn/%s:%s", project.OsID, project.PluginID)
+	osName, err := project.GetOsNameFromID(proj.OsID)
+	if err != nil {
+		return nil, err
+	}
+
+	pluginName, err := project.GetPluginNameFromID(proj.PluginID)
+	if err != nil {
+		return nil, err
+	}
+
+	imageName := fmt.Sprintf("easypwn/%s:%s", osName, pluginName)
 
 	containerName := util.CreateInstanceName()
-	containerID, err := createContainer(ctx, cli, containerName, imageName, project.FilePath, true)
+	containerID, err := createContainer(ctx, cli, containerName, imageName, proj.FilePath, true)
 	if err != nil {
 		return nil, err
 	}
