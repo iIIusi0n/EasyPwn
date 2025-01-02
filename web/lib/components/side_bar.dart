@@ -3,7 +3,9 @@ import '../constants/colors.dart';
 import 'sidebar_item.dart';
 
 class SideBar extends StatelessWidget {
-  const SideBar({super.key});
+  final int selectedIndex;
+
+  const SideBar({super.key, required this.selectedIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -18,19 +20,26 @@ class SideBar extends StatelessWidget {
       child: Column(
         children: [
           SidebarItem(
-            icon: Icons.terminal,
-            label: 'Debug',
+            icon: Icons.folder,
+            label: 'Project',
             onTap: () {},
-            isSelected: true,
+            isSelected: selectedIndex == 0,
           ),
           SidebarItem(
-            icon: Icons.memory,
-            label: 'Memory',
+            icon: Icons.terminal,
+            label: 'Instance',
             onTap: () {},
+            isSelected: selectedIndex == 1,
           ),
           SidebarItem(
             icon: Icons.settings,
-            label: 'Settings',
+            label: 'Setting',
+            onTap: () {},
+            isSelected: selectedIndex == 2,
+          ),
+          SidebarItem(
+            icon: Icons.logout,
+            label: 'Logout',
             onTap: () {},
           ),
         ],

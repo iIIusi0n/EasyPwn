@@ -45,6 +45,10 @@
       font-size: 24px;
       font-weight: bold;
       z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+    #splash.fade {
+      opacity: 0;
     }
 </style>
 </head>
@@ -74,7 +78,14 @@
       }
 
       const splash = document.getElementById("splash");
-      splash.parentElement.removeChild(splash);
+      if (splash) {
+        splash.classList.add("fade");
+        setTimeout(() => {
+          if (splash && splash.parentElement) {
+            splash.parentElement.removeChild(splash);
+          }
+        }, 500);
+      }
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>

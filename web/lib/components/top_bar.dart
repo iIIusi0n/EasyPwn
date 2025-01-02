@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
-import 'custom_button.dart';
-import 'status_badge.dart';
 
 class TopBar extends StatelessWidget {
-  final String instanceName;
-  final String status;
+  final String path;
 
   const TopBar({
     super.key,
-    required this.instanceName,
-    required this.status,
+    required this.path,
   });
 
   @override
   Widget build(BuildContext context) {
+    final pathSegments = path.split('/');
+    final lastSegment = pathSegments.isNotEmpty ? pathSegments.last : '';
+    final parentPath = pathSegments.length > 1 
+        ? '${pathSegments.sublist(0, pathSegments.length - 1).join('/')}/' 
+        : '';
+
     return Container(
       height: 60,
       decoration: const BoxDecoration(
@@ -29,34 +31,20 @@ class TopBar extends StatelessWidget {
           const Icon(Icons.memory, color: AppColors.textSecondary),
           const SizedBox(width: 12),
           Text(
-            'Instance: $instanceName',
+            parentPath,
             style: const TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.textSecondary,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(width: 24),
-          StatusBadge(
-            label: status,
-            color: status == 'Running' ? Colors.green : Colors.red,
-          ),
-          const Spacer(),
-          CustomButton(
-            text: status == 'Running' ? 'Stop' : 'Start',
-            onPressed: () {},
-            width: 80,
-            height: 30,
-            backgroundColor: status == 'Running' ? Colors.red.shade400 : Colors.green.shade400,
-            borderColor: status == 'Running' ? Colors.red.shade400 : Colors.green.shade400,
-            textColor: Colors.white,
-          ),
-          const SizedBox(width: 8),
-          CustomButton(
-            text: 'Restart',
-            onPressed: () {},
-            width: 80,
-            height: 30,
+          Text(
+            lastSegment,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

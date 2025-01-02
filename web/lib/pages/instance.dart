@@ -136,17 +136,14 @@ class _InstancePageState extends State<InstancePage> with SingleTickerProviderSt
       body: Column(
         children: [
           // Top bar
-          TopBar(
-            instanceName: widget.id,
-            status: 'Running',
-          ),
+          const TopBar(path: 'bifrost/uuid-23nif2u-34kb'),
 
           // Main content
           Expanded(
             child: Row(
               children: [
                 // Sidebar
-                const SideBar(),
+                const SideBar(selectedIndex: 1),
 
                 // Terminal area with chat panel
                 Expanded(
