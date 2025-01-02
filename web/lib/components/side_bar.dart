@@ -32,12 +32,6 @@ class SideBar extends StatelessWidget {
             isSelected: selectedIndex == 1,
           ),
           SidebarItem(
-            icon: Icons.settings,
-            label: 'Setting',
-            onTap: () {},
-            isSelected: selectedIndex == 2,
-          ),
-          SidebarItem(
             icon: Icons.logout,
             label: 'Logout',
             onTap: () {},

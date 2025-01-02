@@ -82,15 +82,15 @@ class HomePage extends StatelessWidget {
                       alignment: WrapAlignment.center,
                       children: [
                         CustomButton(
-                          text: 'Join now!',
-                          onPressed: () => context.go('/register'),
+                          text: 'Go to Dashboard',
+                          onPressed: () => context.go('/login'),
                           backgroundColor: AppColors.textPrimary,
                           textColor: Colors.white,
                           width: 200,
                         ),
                         CustomButton(
-                          text: 'Go to Dashboard',
-                          onPressed: () => context.go('/login'),
+                          text: 'Join now!',
+                          onPressed: () => context.go('/register'),
                           width: 200,
                         ),
                       ],
