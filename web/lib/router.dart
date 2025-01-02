@@ -1,8 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
-import 'pages/instance.dart';
+import 'pages/session.dart';
 import 'pages/home_page.dart';
+import 'pages/instance.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -20,12 +21,12 @@ final router = GoRouter(
       builder: (context, state) => const RegisterPage(),
     ),
     GoRoute(
-      path: '/i',
-      builder: (context, state) => const InstancePage(id: 'test'),
+      path: '/instance',
+      builder: (context, state) => const InstancePage(),
     ),
     GoRoute(
-      path: '/i/:id',
-      builder: (context, state) => InstancePage(id: state.pathParameters['id']!),
+      path: '/instance/:id/session',
+      builder: (context, state) => SessionPage(id: state.pathParameters['id']!),
     ),
   ],
 ); 
