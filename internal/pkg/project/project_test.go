@@ -9,7 +9,7 @@ import (
 )
 
 func TestProject(t *testing.T) {
-	u, err := user.NewUser(context.Background(), data.GetDB(), "test-user", "test-password", "test-email")
+	u, err := user.NewUser(context.Background(), data.GetDB(), "test-email", "test-password")
 	if err != nil {
 		t.Fatal("Failed to create user: ", err)
 	}

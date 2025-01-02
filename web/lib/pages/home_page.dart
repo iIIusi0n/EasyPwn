@@ -87,13 +87,11 @@ class HomePage extends StatelessWidget {
                           backgroundColor: AppColors.textPrimary,
                           textColor: Colors.white,
                           width: 200,
-                          height: 45,
                         ),
                         CustomButton(
                           text: 'Go to Dashboard',
                           onPressed: () => context.go('/login'),
                           width: 200,
-                          height: 45,
                         ),
                       ],
                     ),

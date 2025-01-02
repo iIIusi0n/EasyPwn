@@ -10,13 +10,12 @@ import (
 type User struct {
 	ID        string
 	Email     string
-	Username  string
 	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func NewUser(ctx context.Context, db *sql.DB, email, username, password string) (*User, error) {
+func NewUser(ctx context.Context, db *sql.DB, email, password string) (*User, error) {
 	passwordHash := util.HashPassword(password)
 
 	tx, err := db.Begin()
@@ -26,7 +25,7 @@ func NewUser(ctx context.Context, db *sql.DB, email, username, password string) 
 	defer tx.Rollback()
 
 	var userId string
-	result := tx.QueryRow("INSERT INTO user (email, username, password_hash) VALUES (?, ?, ?) RETURNING id", email, username, passwordHash)
+	result := tx.QueryRow("INSERT INTO user (email, password_hash) VALUES (?, ?) RETURNING id", email, passwordHash)
 	err = result.Scan(&userId)
 	if err != nil {
 		return nil, err
@@ -47,7 +46,6 @@ func NewUser(ctx context.Context, db *sql.DB, email, username, password string) 
 	return &User{
 		ID:        userId,
 		Email:     email,
-		Username:  username,
 		Password:  passwordHash,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -55,10 +53,10 @@ func NewUser(ctx context.Context, db *sql.DB, email, username, password string) 
 }
 
 func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {
-	row := db.QueryRow("SELECT id, email, username, password_hash, created_at, updated_at FROM user WHERE id = ?", id)
+	row := db.QueryRow("SELECT id, email, password_hash, created_at, updated_at FROM user WHERE id = ?", id)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -66,10 +64,10 @@ func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {
 }
 
 func GetUserByEmail(ctx context.Context, db *sql.DB, email string) (*User, error) {
-	row := db.QueryRow("SELECT id, email, username, password_hash, created_at, updated_at FROM user WHERE email = ?", email)
+	row := db.QueryRow("SELECT id, email, password_hash, created_at, updated_at FROM user WHERE email = ?", email)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
