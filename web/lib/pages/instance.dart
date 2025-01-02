@@ -220,8 +220,24 @@ class _InstancePageState extends State<InstancePage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (isRunning) ...[
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.blue,
+              side: const BorderSide(color: Colors.blue),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            onPressed: () {
+              // TODO: Open instance
+            },
+            child: const Text('Open'),
+          ),
+          const SizedBox(width: 8),
+        ],
         OutlinedButton(
-          child: Text(isRunning ? 'Restart' : 'Start'),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.green,
             side: const BorderSide(color: Colors.green),
@@ -233,11 +249,11 @@ class _InstancePageState extends State<InstancePage> {
           onPressed: () {
             // TODO: Start/Restart instance
           },
+          child: Text(isRunning ? 'Restart' : 'Start'),
         ),
         if (isRunning) ...[
           const SizedBox(width: 8),
           OutlinedButton(
-            child: const Text('Stop'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.orange,
               side: const BorderSide(color: Colors.orange),
@@ -249,11 +265,11 @@ class _InstancePageState extends State<InstancePage> {
             onPressed: () {
               // TODO: Stop instance
             },
+            child: const Text('Stop'),
           ),
         ],
         const SizedBox(width: 8),
         OutlinedButton(
-          child: const Text('Delete'),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.red,
             side: const BorderSide(color: Colors.red),
@@ -285,6 +301,7 @@ class _InstancePageState extends State<InstancePage> {
               ),
             );
           },
+          child: const Text('Delete'),
         ),
       ],
     );
