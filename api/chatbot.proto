@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package easypwn;
+
+option go_package = "easypwn/internal/api";
+
+service Chatbot {
+    rpc GetResponse(GetResponseRequest) returns (GetResponseResponse) {}
+}
+
+message GetResponseRequest {
+    string instance_id = 1;
+    string message = 2;
+}
+
+message GetResponseResponse {
+    string response = 1;
+}

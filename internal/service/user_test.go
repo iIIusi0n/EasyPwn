@@ -11,7 +11,6 @@ func TestCreateUser(t *testing.T) {
 
 	createUserResponse, err := userService.CreateUser(context.Background(), &pb.CreateUserRequest{
 		Email:    "test@test.com",
-		Username: "test",
 		Password: "password123",
 	})
 
@@ -48,7 +47,6 @@ func TestUpdateUser(t *testing.T) {
 
 	createResp, err := userService.CreateUser(context.Background(), &pb.CreateUserRequest{
 		Email:    "test@test.com",
-		Username: "test",
 		Password: "password123",
 	})
 	if err != nil {
@@ -58,7 +56,6 @@ func TestUpdateUser(t *testing.T) {
 	_, err = userService.UpdateUser(context.Background(), &pb.UpdateUserRequest{
 		UserId:      createResp.UserId,
 		Email:       "test@test.com",
-		Username:    "test",
 		Password:    "",
 		LicenseType: "paid",
 	})
@@ -96,7 +93,6 @@ func TestAuthLogin(t *testing.T) {
 
 	createResp, err := userService.CreateUser(context.Background(), &pb.CreateUserRequest{
 		Email:    "test@test.com",
-		Username: "test",
 		Password: "password123",
 	})
 	if err != nil {
