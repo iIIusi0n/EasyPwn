@@ -4,8 +4,6 @@ import 'package:xterm/xterm.dart';
 import '../constants/colors.dart';
 import '../components/chat/chat_message.dart';
 import '../components/chat/chat_panel.dart';
-import '../components/top_bar.dart';
-import '../components/side_bar.dart';
 import '../components/bottom_bar.dart';
 import '../components/elements/custom_button.dart';
 import '../services/terminal_service.dart';

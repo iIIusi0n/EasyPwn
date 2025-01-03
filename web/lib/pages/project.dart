@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
-import '../components/top_bar.dart';
-import '../components/side_bar.dart';
 import '../components/elements/custom_input.dart';
 import '../components/elements/custom_button.dart';
 import '../components/elements/custom_select.dart';
