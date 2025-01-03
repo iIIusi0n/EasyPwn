@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../components/custom_input.dart';
-import '../components/custom_button.dart';
+import '../components/elements/custom_input.dart';
+import '../components/elements/custom_button.dart';
 import '../constants/colors.dart';
 
 class LoginPage extends StatefulWidget {

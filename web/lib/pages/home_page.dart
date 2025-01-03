@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/colors.dart';
-import '../components/custom_button.dart';
+import '../components/elements/custom_button.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

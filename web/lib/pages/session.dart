@@ -7,7 +7,7 @@ import '../components/chat/chat_panel.dart';
 import '../components/top_bar.dart';
 import '../components/side_bar.dart';
 import '../components/bottom_bar.dart';
-import '../components/custom_button.dart';
+import '../components/elements/custom_button.dart';
 import '../services/terminal_service.dart';
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';

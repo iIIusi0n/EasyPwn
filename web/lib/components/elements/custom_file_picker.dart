@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../constants/colors.dart';
+import '../../constants/colors.dart';
 
 class CustomFilePicker extends StatelessWidget {
   final String? selectedFileName;
