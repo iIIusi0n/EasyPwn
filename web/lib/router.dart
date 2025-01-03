@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
@@ -5,32 +6,45 @@ import 'pages/session.dart';
 import 'pages/home_page.dart';
 import 'pages/instance.dart';
 import 'pages/project.dart';
+
 final router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const HomePage(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: const HomePage(),
+      ),
     ),
     GoRoute(
       path: '/login',
-      builder: (context, state) => const LoginPage(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: LoginPage(),
+      ),
     ),
     GoRoute(
       path: '/register',
-      builder: (context, state) => const RegisterPage(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: RegisterPage(),
+      ),
     ),
     GoRoute(
       path: '/projects',
-      builder: (context, state) => const ProjectPage(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ProjectPage(),
+      ),
     ),
     GoRoute(
       path: '/instances',
-      builder: (context, state) => const InstancePage(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: InstancePage(),
+      ),
     ),
     GoRoute(
       path: '/session/:id',
-      builder: (context, state) => SessionPage(id: state.pathParameters['id']!),
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: SessionPage(id: state.pathParameters['id']!),
+      ),
     ),
   ],
 ); 

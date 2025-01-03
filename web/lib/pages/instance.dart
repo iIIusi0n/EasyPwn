@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../components/top_bar.dart';
 import '../components/side_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class InstancePage extends StatefulWidget {
   const InstancePage({super.key});
@@ -230,7 +231,7 @@ class _InstancePageState extends State<InstancePage> {
               ),
             ),
             onPressed: () {
-              // TODO: Open instance
+              context.go('/session/${instance['id']}');
             },
             child: const Text('Open'),
           ),

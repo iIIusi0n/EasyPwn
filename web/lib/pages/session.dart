@@ -11,7 +11,7 @@ import '../components/elements/custom_button.dart';
 import '../services/terminal_service.dart';
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:go_router/go_router.dart';
 class SessionPage extends StatefulWidget {
   final String id;
   const SessionPage({super.key, required this.id});
@@ -328,6 +328,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
             },
           ),
         ),
+
         if (!isConnected)
           Container(
             color: const Color(0xFF2C1F1F).withOpacity(0.7),
@@ -391,6 +392,26 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
               ),
             ),
           ),
+
+        Positioned(
+          left: 16,
+          bottom: 16,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.logout),
+              iconSize: 20,
+              color: AppColors.textSecondary,
+              onPressed: () {
+                context.go('/instances');
+              },
+            ),
+          ),
+        ),
       ],
     );
   }
