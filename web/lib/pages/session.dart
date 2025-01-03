@@ -73,8 +73,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     
     terminalController = TerminalController();
 
-    // terminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/ws');
-    terminalService.connect('ws://localhost:8081/ws');
+    terminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/ws');
 
     terminalService.onData = (data) {
       if (data is List<int>) {
