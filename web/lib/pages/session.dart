@@ -10,6 +10,8 @@ import '../services/terminal_service.dart';
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
+
 class SessionPage extends StatefulWidget {
   final String id;
   const SessionPage({super.key, required this.id});
@@ -38,6 +40,8 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
   final double maxChatWidth = 750;
   double chatWidth = 450;
 
+  late StreamSubscription _connectionSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -53,10 +57,12 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     );
     _initializeTerminal();
 
-    terminalService.connectionStatus.listen((status) {
-      setState(() {
-        isConnected = status;
-      });
+    _connectionSubscription = terminalService.connectionStatus.listen((status) {
+      if (mounted) {
+        setState(() {
+          isConnected = status;
+        });
+      }
     });
   }
 
@@ -67,8 +73,9 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     
     terminalController = TerminalController();
 
-    terminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/ws');
-    
+    // terminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/ws');
+    terminalService.connect('ws://localhost:8081/ws');
+
     terminalService.onData = (data) {
       if (data is List<int>) {
         terminal.write(const Utf8Decoder().convert(data));
@@ -93,6 +100,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
 
   @override
   void dispose() {
+    _connectionSubscription.cancel();
     _terminalController.dispose();
     _chatController.dispose();
     _terminalScrollController.dispose();
