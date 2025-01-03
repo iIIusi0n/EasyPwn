@@ -129,6 +129,7 @@ class _ProjectPageState extends State<ProjectPage> {
                         border: TableBorder.all(
                           color: Colors.grey.shade300,
                           width: 1,
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         columns: const [
                           DataColumn(

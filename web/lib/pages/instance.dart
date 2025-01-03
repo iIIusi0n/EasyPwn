@@ -11,6 +11,9 @@ class InstancePage extends StatefulWidget {
 
 class _InstancePageState extends State<InstancePage> {
   String? selectedProjectId;
+  bool _sortAscending = true;
+  int _sortColumnIndex = 0;
+
   List<Map<String, dynamic>> instances = [
     {
       'id': 'inst-1',
@@ -21,7 +24,33 @@ class _InstancePageState extends State<InstancePage> {
       'os': 'ubuntu-2410',
       'plugin': 'gef',
     },
-    // Add more mock data as needed
+    {
+      'id': 'inst-2',
+      'projectId': 'proj-1',
+      'createdAt': DateTime.now().subtract(const Duration(days: 1)),
+      'status': 'Stopped',
+      'memoryUsage': '256MB',
+      'os': 'debian-12',
+      'plugin': 'radare2',
+    },
+    {
+      'id': 'inst-3',
+      'projectId': 'proj-2',
+      'createdAt': DateTime.now().subtract(const Duration(minutes: 30)),
+      'status': 'Pending',
+      'memoryUsage': '512MB',
+      'os': 'kali-2024',
+      'plugin': 'ghidra',
+    },
+    {
+      'id': 'inst-4',
+      'projectId': 'proj-1',
+      'createdAt': DateTime.now().subtract(const Duration(days: 5)),
+      'status': 'Running',
+      'memoryUsage': '1GB',
+      'os': 'ubuntu-2404',
+      'plugin': 'binary ninja',
+    },
   ];
 
   @override
@@ -76,43 +105,78 @@ class _InstancePageState extends State<InstancePage> {
                       child: DataTable(
                         columnSpacing: 56.0,
                         horizontalMargin: 16.0,
+                        sortAscending: _sortAscending,
+                        sortColumnIndex: _sortColumnIndex,
                         dividerThickness: 1,
                         border: TableBorder.all(
                           color: Colors.grey.shade300,
                           width: 1,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        columns: const [
+                        columns: [
                           DataColumn(
-                            label: Text(
-                              'Created',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            label: const Padding(
+                              padding: EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                'Created',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
+                            onSort: (columnIndex, ascending) {
+                              setState(() {
+                                _sortColumnIndex = columnIndex;
+                                _sortAscending = ascending;
+                                instances.sort((a, b) {
+                                  final DateTime aDate = a['createdAt'] as DateTime;
+                                  final DateTime bDate = b['createdAt'] as DateTime;
+                                  return ascending
+                                      ? aDate.compareTo(bDate)
+                                      : bDate.compareTo(aDate);
+                                });
+                              });
+                            },
                           ),
                           DataColumn(
-                            label: Text(
-                              'Status',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            label: const Padding(
+                              padding: EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                'Status',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
+                            onSort: (columnIndex, ascending) {
+                              setState(() {
+                                _sortColumnIndex = columnIndex;
+                                _sortAscending = ascending;
+                                instances.sort((a, b) {
+                                  final String aStatus = a['status'] as String;
+                                  final String bStatus = b['status'] as String;
+                                  return ascending
+                                      ? aStatus.compareTo(bStatus)
+                                      : bStatus.compareTo(aStatus);
+                                });
+                              });
+                            },
                           ),
-                          DataColumn(
+                          const DataColumn(
                             label: Text(
                               'Memory',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
-                          DataColumn(
+                          const DataColumn(
                             label: Text(
                               'OS',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
-                          DataColumn(
+                          const DataColumn(
                             label: Text(
                               'Plugin',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
-                          DataColumn(
+                          const DataColumn(
                             label: Text(
                               'Actions',
                               style: TextStyle(fontWeight: FontWeight.bold),
