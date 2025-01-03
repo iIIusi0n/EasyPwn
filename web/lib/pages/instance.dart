@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../constants/colors.dart';
 import '../components/top_bar.dart';
 import '../components/side_bar.dart';
-import 'package:go_router/go_router.dart';
 
 class InstancePage extends StatefulWidget {
   const InstancePage({super.key});
@@ -36,134 +36,116 @@ class _InstancePageState extends State<InstancePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: Column(
-        children: [
-          const TopBar(path: 'user/instances'),
-
-          // Main content
-          Expanded(
-            child: Row(
-              children: [
-                const SideBar(selectedIndex: 1),
-                
-                // Instance content
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Project selector
-                        SizedBox(
-                          width: 300,
-                          child: DropdownButtonFormField<String>(
-                            value: selectedProjectId,
-                            decoration: const InputDecoration(
-                              labelText: 'Select Project',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'proj-1',
-                                child: Text('Project 1'),
-                              ),
-                              // Add more projects
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                selectedProjectId = value;
-                              });
-                            },
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // Instances table
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: SizedBox(
-                                  width: constraints.maxWidth,
-                                  child: DataTable(
-                                    columnSpacing: 56.0,
-                                    horizontalMargin: 16.0,
-                                    dividerThickness: 1,
-                                    border: TableBorder.all(
-                                      color: Colors.grey.shade300,
-                                      width: 1,
-                                    ),
-                                    columns: const [
-                                      DataColumn(
-                                        label: Text(
-                                          'Created',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Status',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Memory',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'OS',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Plugin',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Actions',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ],
-                                    rows: instances
-                                        .where((instance) =>
-                                            selectedProjectId == null ||
-                                            instance['projectId'] == selectedProjectId)
-                                        .map((instance) {
-                                      return DataRow(
-                                        cells: [
-                                          DataCell(Text(_formatDateTime(
-                                              instance['createdAt'] as DateTime))),
-                                          DataCell(_buildStatusCell(instance['status'])),
-                                          DataCell(Text(instance['memoryUsage'])),
-                                          DataCell(Text(instance['os'])),
-                                          DataCell(Text(instance['plugin'])),
-                                          DataCell(_buildActionButtons(instance)),
-                                        ],
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Project selector
+            SizedBox(
+              width: 300,
+              child: DropdownButtonFormField<String>(
+                value: selectedProjectId,
+                decoration: const InputDecoration(
+                  labelText: 'Select Project',
+                  border: OutlineInputBorder(),
                 ),
-              ],
+                items: const [
+                  DropdownMenuItem(
+                    value: 'proj-1',
+                    child: Text('Project 1'),
+                  ),
+                  // Add more projects
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedProjectId = value;
+                  });
+                },
+              ),
             ),
-          ),
-        ],
+            
+            const SizedBox(height: 12),
+            
+            // Instances table
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      child: DataTable(
+                        columnSpacing: 56.0,
+                        horizontalMargin: 16.0,
+                        dividerThickness: 1,
+                        border: TableBorder.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              'Created',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Status',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Memory',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'OS',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Plugin',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Actions',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                        rows: instances
+                            .where((instance) =>
+                                selectedProjectId == null ||
+                                instance['projectId'] == selectedProjectId)
+                            .map((instance) {
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(_formatDateTime(
+                                  instance['createdAt'] as DateTime))),
+                              DataCell(_buildStatusCell(instance['status'])),
+                              DataCell(Text(instance['memoryUsage'])),
+                              DataCell(Text(instance['os'])),
+                              DataCell(Text(instance['plugin'])),
+                              DataCell(_buildActionButtons(instance)),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

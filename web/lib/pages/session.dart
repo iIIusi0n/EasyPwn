@@ -135,153 +135,140 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
       backgroundColor: AppColors.surface,
       body: Column(
         children: [
-          // Top bar
-          const TopBar(path: 'bifrost/uuid-23nif2u-34kb'),
-
           // Main content
           Expanded(
-            child: Row(
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                // Sidebar
-                const SideBar(selectedIndex: 1),
-
-                // Terminal area with chat panel
-                Expanded(
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Row(
+                Row(
+                  children: [
+                    // Terminal area
+                    Expanded(
+                      child: Column(
                         children: [
-                          // Terminal area
+                          TabBar(
+                            controller: _tabController,
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            labelColor: AppColors.textPrimary,
+                            unselectedLabelColor: AppColors.greyShade(600),
+                            indicatorColor: AppColors.textPrimary,
+                            indicatorWeight: 2,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            tabs: const [
+                              Tab(text: 'Debugger'),
+                              Tab(text: 'Shell'),
+                            ],
+                          ),
                           Expanded(
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildDebuggerTab(),
+                                _buildDebuggerTab(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Chat panel
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      curve: Curves.easeInOut,
+                      width: isChatExpanded ? chatWidth : 0,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: SizedBox(
+                          width: chatWidth,
+                          child: ChatPanel(
+                            chatMessages: chatMessages,
+                            chatController: _chatController,
+                            chatScrollController: _chatScrollController,
+                            chatFocusNode: _chatFocusNode,
+                            onSubmit: _handleChatSubmit,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Chat toggle button
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeInOut,
+                  right: isChatExpanded ? chatWidth : 0,
+                  top: MediaQuery.of(context).size.height / 2 - 60,
+                  child: GestureDetector(
+                    
+                    onHorizontalDragUpdate: (details) {
+                      if (!isChatExpanded) return;
+                      setState(() {
+                        chatWidth = (chatWidth - details.delta.dx).clamp(minChatWidth, maxChatWidth);
+                      });
+                    },
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                      child: Material(
+                        elevation: 4,
+                        color: AppColors.surface,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          bottomLeft: Radius.circular(24),
+                          topRight: Radius.circular(0),
+                          bottomRight: Radius.circular(0),
+                        ),
+                        child: InkWell(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(24),
+                            bottomLeft: Radius.circular(24),
+                            topRight: Radius.circular(0),
+                            bottomRight: Radius.circular(0),
+                          ),
+                          onTap: () {
+                            setState(() {
+                              isChatExpanded = !isChatExpanded;
+                            });
+                          },
+                          child: Container(
+                            width: 22,
+                            height: 90,
+                            decoration: const ShapeDecoration(
+                              color: AppColors.surface,
+                              shape: ContinuousRectangleBorder(
+                                side: BorderSide(color: AppColors.border, width: 1.5),
+                                borderRadius: BorderRadius.horizontal(
+                                  left: Radius.elliptical(24, 48),
+                                ),
+                              ),
+                            ),
                             child: Column(
                               children: [
-                                TabBar(
-                                  controller: _tabController,
-                                  isScrollable: true,
-                                  tabAlignment: TabAlignment.start,
-                                  labelColor: AppColors.textPrimary,
-                                  unselectedLabelColor: AppColors.greyShade(600),
-                                  indicatorColor: AppColors.textPrimary,
-                                  indicatorWeight: 2,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  tabs: const [
-                                    Tab(text: 'Debugger'),
-                                    Tab(text: 'Shell'),
-                                  ],
-                                ),
                                 Expanded(
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [
-                                      _buildDebuggerTab(),
-                                      _buildDebuggerTab(),
-                                    ],
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isChatExpanded 
+                                              ? Icons.chevron_right
+                                              : Icons.chevron_left,
+                                          size: 16,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-
-                          // Chat panel
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 100),
-                            curve: Curves.easeInOut,
-                            width: isChatExpanded ? chatWidth : 0,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const NeverScrollableScrollPhysics(),
-                              child: SizedBox(
-                                width: chatWidth,
-                                child: ChatPanel(
-                                  chatMessages: chatMessages,
-                                  chatController: _chatController,
-                                  chatScrollController: _chatScrollController,
-                                  chatFocusNode: _chatFocusNode,
-                                  onSubmit: _handleChatSubmit,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      // Chat toggle button
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 100),
-                        curve: Curves.easeInOut,
-                        right: isChatExpanded ? chatWidth : 0,
-                        top: MediaQuery.of(context).size.height / 2 - 60,
-                        child: GestureDetector(
-                          
-                          onHorizontalDragUpdate: (details) {
-                            if (!isChatExpanded) return;
-                            setState(() {
-                              chatWidth = (chatWidth - details.delta.dx).clamp(minChatWidth, maxChatWidth);
-                            });
-                          },
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.resizeLeftRight,
-                            child: Material(
-                              elevation: 4,
-                              color: AppColors.surface,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(24),
-                                bottomLeft: Radius.circular(24),
-                                topRight: Radius.circular(0),
-                                bottomRight: Radius.circular(0),
-                              ),
-                              child: InkWell(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(24),
-                                  bottomLeft: Radius.circular(24),
-                                  topRight: Radius.circular(0),
-                                  bottomRight: Radius.circular(0),
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    isChatExpanded = !isChatExpanded;
-                                  });
-                                },
-                                child: Container(
-                                  width: 22,
-                                  height: 90,
-                                  decoration: const ShapeDecoration(
-                                    color: AppColors.surface,
-                                    shape: ContinuousRectangleBorder(
-                                      side: BorderSide(color: AppColors.border, width: 1.5),
-                                      borderRadius: BorderRadius.horizontal(
-                                        left: Radius.elliptical(24, 48),
-                                      ),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                isChatExpanded 
-                                                    ? Icons.chevron_right
-                                                    : Icons.chevron_left,
-                                                size: 16,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],

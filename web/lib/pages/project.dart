@@ -43,162 +43,147 @@ class _ProjectPageState extends State<ProjectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: Column(
-        children: [
-          const TopBar(path: 'user/projects'),
-          Expanded(
-            child: Row(
-              children: [
-                const SideBar(selectedIndex: 0),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left side - New Project Form
-                        SizedBox(
-                          width: 300,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'New Project',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              CustomInput(
-                                controller: _nameController,
-                                hintText: 'Project Name',
-                              ),
-                              const SizedBox(height: 16),
-                              CustomSelect(
-                                value: selectedOs ?? '',
-                                label: 'Operating System',
-                                items: const [
-                                  {'value': 'ubuntu-2410', 'label': 'Ubuntu 24.10'},
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedOs = value;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              CustomSelect(
-                                value: selectedPlugin ?? '',
-                                label: 'Debug Plugin',
-                                items: const [
-                                  {'value': 'gef', 'label': 'GEF'},
-                                  {'value': 'pwndbg', 'label': 'pwndbg'},
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedPlugin = value;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              CustomFilePicker(
-                                selectedFileName: selectedFileName,
-                                onFileSelected: (file) {
-                                  setState(() {
-                                    selectedFileName = file.name;
-                                    selectedFile = file;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 24),
-                              CustomButton(
-                                text: 'Create Project',
-                                onPressed: () {
-                                  // TODO: Implement project creation
-                                },
-                                width: double.infinity,
-                              ),
-                              
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 48),
-                        // Right side - Projects Table
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: SizedBox(
-                                  width: constraints.maxWidth,
-                                  child: DataTable(
-                                    columnSpacing: 56.0,
-                                    horizontalMargin: 16.0,
-                                    dividerThickness: 1,
-                                    border: TableBorder.all(
-                                      color: Colors.grey.shade300,
-                                      width: 1,
-                                    ),
-                                    columns: const [
-                                      DataColumn(
-                                        label: Text(
-                                          'Project Name',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'OS',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Plugin',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Created',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Actions',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ],
-                                    rows: projects.map((project) {
-                                      return DataRow(
-                                        cells: [
-                                          DataCell(Text(project['name'])),
-                                          DataCell(Text(project['os'])),
-                                          DataCell(Text(project['plugin'])),
-                                          DataCell(Text(_formatDateTime(
-                                              project['createdAt'] as DateTime))),
-                                          DataCell(_buildActionButtons(project)),
-                                        ],
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left side - New Project Form
+            SizedBox(
+              width: 300,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'New Project',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  CustomInput(
+                    controller: _nameController,
+                    hintText: 'Project Name',
+                  ),
+                  const SizedBox(height: 16),
+                  CustomSelect(
+                    value: selectedOs ?? '',
+                    label: 'Operating System',
+                    items: const [
+                      {'value': 'ubuntu-2410', 'label': 'Ubuntu 24.10'},
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOs = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  CustomSelect(
+                    value: selectedPlugin ?? '',
+                    label: 'Debug Plugin',
+                    items: const [
+                      {'value': 'gef', 'label': 'GEF'},
+                      {'value': 'pwndbg', 'label': 'pwndbg'},
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPlugin = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  CustomFilePicker(
+                    selectedFileName: selectedFileName,
+                    onFileSelected: (file) {
+                      setState(() {
+                        selectedFileName = file.name;
+                        selectedFile = file;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    text: 'Create Project',
+                    onPressed: () {
+                      // TODO: Implement project creation
+                    },
+                    width: double.infinity,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 48),
+            // Right side - Projects Table
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      child: DataTable(
+                        columnSpacing: 56.0,
+                        horizontalMargin: 16.0,
+                        dividerThickness: 1,
+                        border: TableBorder.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              'Project Name',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'OS',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Plugin',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Created',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Actions',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                        rows: projects.map((project) {
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(project['name'])),
+                              DataCell(Text(project['os'])),
+                              DataCell(Text(project['plugin'])),
+                              DataCell(Text(_formatDateTime(
+                                  project['createdAt'] as DateTime))),
+                              DataCell(_buildActionButtons(project)),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

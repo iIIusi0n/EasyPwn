@@ -6,16 +6,12 @@ import 'pages/session.dart';
 import 'pages/home_page.dart';
 import 'pages/instance.dart';
 import 'pages/project.dart';
+import 'components/dashboard_layout.dart';
 
 final router = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: const HomePage(),
-      ),
-    ),
+    // Auth routes (no shell)
     GoRoute(
       path: '/login',
       pageBuilder: (context, state) => const NoTransitionPage(
@@ -28,23 +24,45 @@ final router = GoRouter(
         child: RegisterPage(),
       ),
     ),
+    // Home route (no shell)
     GoRoute(
-      path: '/projects',
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: ProjectPage(),
-      ),
+      path: '/',
+      builder: (context, state) => const HomePage(),
     ),
-    GoRoute(
-      path: '/instances',
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: InstancePage(),
-      ),
-    ),
-    GoRoute(
-      path: '/session/:id',
-      pageBuilder: (context, state) => NoTransitionPage(
-        child: SessionPage(id: state.pathParameters['id']!),
-      ),
+    
+    // Main app routes (with shell)
+    ShellRoute(
+      builder: (context, state, child) {
+        final path = state.uri.path;
+        final selectedIndex = switch (path) {
+          '/projects' => 0,
+          '/instances' => 1,
+          String s when s.startsWith('/session/') => 1,
+          _ => -1,
+        };
+        
+        return DashboardLayout(
+          path: path,
+          selectedIndex: selectedIndex,
+          child: child,
+        );
+      },
+      routes: [
+        GoRoute(
+          path: '/projects',
+          builder: (context, state) => const ProjectPage(),
+        ),
+        GoRoute(
+          path: '/instances',
+          builder: (context, state) => const InstancePage(),
+        ),
+        GoRoute(
+          path: '/session/:id',
+          builder: (context, state) => SessionPage(
+            id: state.pathParameters['id'] ?? '',
+          ),
+        ),
+      ],
     ),
   ],
 ); 
