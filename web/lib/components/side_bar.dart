@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import 'sidebar_item.dart';
+import 'package:go_router/go_router.dart';
 
 class SideBar extends StatelessWidget {
   final int selectedIndex;
@@ -21,14 +22,14 @@ class SideBar extends StatelessWidget {
         children: [
           SidebarItem(
             icon: Icons.folder,
-            label: 'Project',
-            onTap: () {},
+            label: 'Projects',
+            onTap: () => context.go('/projects'),
             isSelected: selectedIndex == 0,
           ),
           SidebarItem(
             icon: Icons.terminal,
-            label: 'Instance',
-            onTap: () {},
+            label: 'Instances',
+            onTap: () => context.go('/instances'),
             isSelected: selectedIndex == 1,
           ),
           SidebarItem(

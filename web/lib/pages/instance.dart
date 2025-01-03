@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../components/top_bar.dart';
 import '../components/side_bar.dart';
-import '../components/bottom_bar.dart';
 
 class InstancePage extends StatefulWidget {
   const InstancePage({super.key});
