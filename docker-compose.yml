@@ -1,0 +1,83 @@
+services:
+  web:
+    image: easypwn/web
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api-gateway
+
+  api-gateway:
+    image: easypwn/api-gateway
+    build:
+      context: .
+      dockerfile: cmd/api-gateway/Dockerfile
+    environment:
+      - API_LISTEN_PORT=8080
+      - USER_SERVICE_ADDR=user-service:50051
+      - PROJECT_SERVICE_ADDR=project-service:50052
+      - INSTANCE_SERVICE_ADDR=instance-service:50053
+    ports:
+      - "8081:8080"
+    depends_on:
+      - user-service
+      - project-service
+      - instance-service
+
+  user-service:
+    image: easypwn/user-service
+    build:
+      context: .
+      dockerfile: cmd/user-service/Dockerfile
+    environment:
+      - USER_LISTEN_PORT=50051
+      - DATABASE_URL=mysql://easypwn:fc9bed8d80795d30793b15f3d7abe482644e3f5a@db:3306/easypwn
+    depends_on:
+      - db
+
+  project-service:
+    image: easypwn/project-service
+    build:
+      context: .
+      dockerfile: cmd/project-service/Dockerfile
+    environment:
+      - PROJECT_LISTEN_PORT=50052
+      - DATABASE_URL=mysql://easypwn:fc9bed8d80795d30793b15f3d7abe482644e3f5a@db:3306/easypwn
+    depends_on:
+      - db
+
+  instance-service:
+    image: easypwn/instance-service
+    build:
+      context: .
+      dockerfile: cmd/instance-service/Dockerfile
+    environment:
+      - INSTANCE_LISTEN_PORT=50053
+      - DATABASE_URL=mysql://easypwn:fc9bed8d80795d30793b15f3d7abe482644e3f5a@db:3306/easypwn
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
+
+  db:
+    image: mysql:9.1
+    environment:
+      - MYSQL_DATABASE=easypwn
+      - MYSQL_USER=easypwn
+      - MYSQL_PASSWORD=fc9bed8d80795d30793b15f3d7abe482644e3f5a
+      - MYSQL_ROOT_PASSWORD=ea5421c6f9ee7bc6d603d91ff2f577e7aef4e780
+    volumes:
+      - ./assets/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "easypwn", "-p", "fc9bed8d80795d30793b15f3d7abe482644e3f5a"]
+      interval: 1m
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:

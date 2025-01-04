@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import '../../constants/colors.dart';
 
 class CustomInput extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final bool isPassword;
-
+  final bool enabled;
   const CustomInput({
     super.key,
     required this.controller,
     required this.hintText,
     this.isPassword = false,
+    this.enabled = true,
   });
 
   @override
@@ -25,6 +26,7 @@ class CustomInput extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: isPassword,
+        enabled: enabled,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: AppColors.greyShade(400)),

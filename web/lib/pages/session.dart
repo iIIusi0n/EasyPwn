@@ -4,22 +4,23 @@ import 'package:xterm/xterm.dart';
 import '../constants/colors.dart';
 import '../components/chat/chat_message.dart';
 import '../components/chat/chat_panel.dart';
-import '../components/top_bar.dart';
-import '../components/side_bar.dart';
 import '../components/bottom_bar.dart';
-import '../components/custom_button.dart';
+import '../components/elements/custom_button.dart';
 import '../services/terminal_service.dart';
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+import 'dart:async';
 
-class InstancesPage extends StatefulWidget {
-  const InstancesPage({super.key});
+class SessionPage extends StatefulWidget {
+  final String id;
+  const SessionPage({super.key, required this.id});
 
   @override
-  State<InstancesPage> createState() => _InstancesPageState();
+  State<SessionPage> createState() => _SessionPageState();
 }
 
-class _InstancesPageState extends State<InstancesPage> with SingleTickerProviderStateMixin {
+class _SessionPageState extends State<SessionPage> with SingleTickerProviderStateMixin {
   bool isChatExpanded = true;
   bool isConnected = true;
   final TextEditingController _terminalController = TextEditingController();
@@ -34,6 +35,12 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
   late Terminal terminal;
   late TerminalController terminalController;
   final TerminalService terminalService = TerminalService();
+
+  final double minChatWidth = 300;
+  final double maxChatWidth = 750;
+  double chatWidth = 450;
+
+  late StreamSubscription _connectionSubscription;
 
   @override
   void initState() {
@@ -50,10 +57,12 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
     );
     _initializeTerminal();
 
-    terminalService.connectionStatus.listen((status) {
-      setState(() {
-        isConnected = status;
-      });
+    _connectionSubscription = terminalService.connectionStatus.listen((status) {
+      if (mounted) {
+        setState(() {
+          isConnected = status;
+        });
+      }
     });
   }
 
@@ -65,7 +74,7 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
     terminalController = TerminalController();
 
     terminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/ws');
-    
+
     terminalService.onData = (data) {
       if (data is List<int>) {
         terminal.write(const Utf8Decoder().convert(data));
@@ -90,6 +99,7 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
 
   @override
   void dispose() {
+    _connectionSubscription.cancel();
     _terminalController.dispose();
     _chatController.dispose();
     _terminalScrollController.dispose();
@@ -130,144 +140,140 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
       backgroundColor: AppColors.surface,
       body: Column(
         children: [
-          // Top bar
-          const TopBar(
-            instanceName: 'debug-session-1',
-            status: 'Running',
-          ),
-
           // Main content
           Expanded(
-            child: Row(
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                // Sidebar
-                const SideBar(),
-
-                // Terminal area with chat panel
-                Expanded(
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Row(
+                Row(
+                  children: [
+                    // Terminal area
+                    Expanded(
+                      child: Column(
                         children: [
-                          // Terminal area
-                          Expanded(
-                            child: Column(
-                              children: [
-                                TabBar(
-                                  controller: _tabController,
-                                  isScrollable: true,
-                                  tabAlignment: TabAlignment.start,
-                                  labelColor: AppColors.textPrimary,
-                                  unselectedLabelColor: AppColors.greyShade(600),
-                                  indicatorColor: AppColors.textPrimary,
-                                  indicatorWeight: 2,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  tabs: const [
-                                    Tab(text: 'Console'),
-                                    Tab(text: 'Python'),
-                                  ],
-                                ),
-                                Expanded(
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [
-                                      _buildConsoleTab(),
-                                      _buildPythonTab(),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                          TabBar(
+                            controller: _tabController,
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            labelColor: AppColors.textPrimary,
+                            unselectedLabelColor: AppColors.greyShade(600),
+                            indicatorColor: AppColors.textPrimary,
+                            indicatorWeight: 2,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            tabs: const [
+                              Tab(text: 'Debugger'),
+                              Tab(text: 'Shell'),
+                            ],
                           ),
-
-                          // Chat panel
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            width: isChatExpanded ? 450 : 0,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const NeverScrollableScrollPhysics(),
-                              child: SizedBox(
-                                width: 450,
-                                child: ChatPanel(
-                                  chatMessages: chatMessages,
-                                  chatController: _chatController,
-                                  chatScrollController: _chatScrollController,
-                                  chatFocusNode: _chatFocusNode,
-                                  onSubmit: _handleChatSubmit,
-                                ),
-                              ),
+                          Expanded(
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildDebuggerTab(),
+                                _buildDebuggerTab(),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      
-                      // Chat toggle button
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                        right: isChatExpanded ? 450 : 0,
-                        top: MediaQuery.of(context).size.height / 2 - 60,
-                        child: Material(
-                          elevation: 4,
-                          color: AppColors.surface,
+                    ),
+
+                    // Chat panel
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      curve: Curves.easeInOut,
+                      width: isChatExpanded ? chatWidth : 0,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: SizedBox(
+                          width: chatWidth,
+                          child: ChatPanel(
+                            chatMessages: chatMessages,
+                            chatController: _chatController,
+                            chatScrollController: _chatScrollController,
+                            chatFocusNode: _chatFocusNode,
+                            onSubmit: _handleChatSubmit,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Chat toggle button
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeInOut,
+                  right: isChatExpanded ? chatWidth : 0,
+                  top: MediaQuery.of(context).size.height / 2 - 60,
+                  child: GestureDetector(
+                    
+                    onHorizontalDragUpdate: (details) {
+                      if (!isChatExpanded) return;
+                      setState(() {
+                        chatWidth = (chatWidth - details.delta.dx).clamp(minChatWidth, maxChatWidth);
+                      });
+                    },
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                      child: Material(
+                        elevation: 4,
+                        color: AppColors.surface,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          bottomLeft: Radius.circular(24),
+                          topRight: Radius.circular(0),
+                          bottomRight: Radius.circular(0),
+                        ),
+                        child: InkWell(
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(24),
                             bottomLeft: Radius.circular(24),
                             topRight: Radius.circular(0),
                             bottomRight: Radius.circular(0),
                           ),
-                          child: InkWell(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              bottomLeft: Radius.circular(24),
-                              topRight: Radius.circular(0),
-                              bottomRight: Radius.circular(0),
-                            ),
-                            onTap: () {
-                              setState(() {
-                                isChatExpanded = !isChatExpanded;
-                              });
-                            },
-                            child: Container(
-                              width: 22,
-                              height: 90,
-                              decoration: const ShapeDecoration(
-                                color: AppColors.surface,
-                                shape: ContinuousRectangleBorder(
-                                  side: BorderSide(color: AppColors.border, width: 1.5),
-                                  borderRadius: BorderRadius.horizontal(
-                                    left: Radius.elliptical(24, 48),
-                                  ),
+                          onTap: () {
+                            setState(() {
+                              isChatExpanded = !isChatExpanded;
+                            });
+                          },
+                          child: Container(
+                            width: 22,
+                            height: 90,
+                            decoration: const ShapeDecoration(
+                              color: AppColors.surface,
+                              shape: ContinuousRectangleBorder(
+                                side: BorderSide(color: AppColors.border, width: 1.5),
+                                borderRadius: BorderRadius.horizontal(
+                                  left: Radius.elliptical(24, 48),
                                 ),
                               ),
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            isChatExpanded 
-                                                ? Icons.chevron_right
-                                                : Icons.chevron_left,
-                                            size: 16,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ],
-                                      ),
+                            ),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isChatExpanded 
+                                              ? Icons.chevron_right
+                                              : Icons.chevron_left,
+                                          size: 16,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -284,7 +290,7 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildConsoleTab() {
+  Widget _buildDebuggerTab() {
     return Stack(
       children: [
         Container(
@@ -295,7 +301,7 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
             autofocus: true,
             backgroundOpacity: 0.7,
             textStyle: TerminalStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontFamily: GoogleFonts.robotoMono().fontFamily!,
             ),
             onSecondaryTapDown: (details, offset) async {
@@ -314,6 +320,7 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
             },
           ),
         ),
+
         if (!isConnected)
           Container(
             color: const Color(0xFF2C1F1F).withOpacity(0.7),
@@ -377,30 +384,27 @@ class _InstancesPageState extends State<InstancesPage> with SingleTickerProvider
               ),
             ),
           ),
-      ],
-    );
-  }
 
-  Widget _buildPythonTab() {
-    return Container(
-      color: AppColors.surfaceDark,
-      child: TextField(
-        controller: _chatController,
-        focusNode: _chatFocusNode,
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: GoogleFonts.robotoMono().fontFamily,
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.logout),
+              iconSize: 20,
+              color: AppColors.textSecondary,
+              onPressed: () {
+                context.go('/instances');
+              },
+            ),
+          ),
         ),
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Enter Python code...',
-          hintStyle: TextStyle(color: Colors.grey),
-          fillColor: AppColors.surfaceDark,
-          filled: true,
-        ),
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-      ),
+      ],
     );
   }
 }

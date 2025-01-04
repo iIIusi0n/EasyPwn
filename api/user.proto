@@ -24,8 +24,7 @@ message AuthLoginResponse {
 
 message CreateUserRequest {
     string email = 1;
-    string username = 2;
-    string password = 3;
+    string password = 2;
 }
 
 message CreateUserResponse {
@@ -39,16 +38,15 @@ message GetUserRequest {
 message GetUserResponse {
     string user_id = 1;
     string email = 2;
-    string username = 3;
+    string password = 3;
     string license_type = 4;
 }
 
 message UpdateUserRequest {
     string user_id = 1;
     string email = 2;
-    string username = 3;
-    string password = 4;
-    string license_type = 5;
+    string password = 3;
+    string license_type = 4;
 }
 
 message UpdateUserResponse {

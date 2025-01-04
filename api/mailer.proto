@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package easypwn;
+
+option go_package = "easypwn/internal/api";
+
+service Mailer {
+  rpc SendEmailConfirmation(SendEmailConfirmationRequest) returns (SendEmailConfirmationResponse);
+}
+
+message SendEmailConfirmationRequest {
+  string email = 1;
+}
+
+message SendEmailConfirmationResponse {
+  string code = 1;
+}

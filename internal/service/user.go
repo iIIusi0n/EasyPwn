@@ -38,7 +38,7 @@ func (s *UserService) AuthLogin(ctx context.Context, req *pb.AuthLoginRequest) (
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	db := data.GetDB()
 
-	user, err := user.NewUser(ctx, db, req.Email, req.Username, req.Password)
+	user, err := user.NewUser(ctx, db, req.Email, req.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,6 @@ func (s *UserService) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.
 	return &pb.GetUserResponse{
 		UserId:      u.ID,
 		Email:       u.Email,
-		Username:    u.Username,
 		LicenseType: licenseType,
 	}, nil
 }

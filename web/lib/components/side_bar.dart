@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import 'sidebar_item.dart';
+import 'package:go_router/go_router.dart';
 
 class SideBar extends StatelessWidget {
-  const SideBar({super.key});
+  final int selectedIndex;
+
+  const SideBar({super.key, required this.selectedIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -18,19 +21,20 @@ class SideBar extends StatelessWidget {
       child: Column(
         children: [
           SidebarItem(
+            icon: Icons.folder,
+            label: 'Projects',
+            onTap: () => context.go('/projects'),
+            isSelected: selectedIndex == 0,
+          ),
+          SidebarItem(
             icon: Icons.terminal,
-            label: 'Debug',
-            onTap: () {},
-            isSelected: true,
+            label: 'Instances',
+            onTap: () => context.go('/instances'),
+            isSelected: selectedIndex == 1,
           ),
           SidebarItem(
-            icon: Icons.memory,
-            label: 'Memory',
-            onTap: () {},
-          ),
-          SidebarItem(
-            icon: Icons.settings,
-            label: 'Settings',
+            icon: Icons.logout,
+            label: 'Logout',
             onTap: () {},
           ),
         ],

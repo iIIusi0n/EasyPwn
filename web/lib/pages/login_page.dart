@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../components/custom_input.dart';
-import '../components/custom_button.dart';
+import '../components/elements/custom_input.dart';
+import '../components/elements/custom_button.dart';
 import '../constants/colors.dart';
 
 class LoginPage extends StatefulWidget {
@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                   color: AppColors.greyShade(600),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               CustomInput(
                 controller: _emailController,
                 hintText: 'Email',
