@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../components/elements/custom_input.dart';
 import '../components/elements/custom_button.dart';
 import '../constants/colors.dart';
+import 'dart:async';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,13 +16,37 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _confirmationCodeController = TextEditingController();
+  bool _isConfirmationEnabled = false;
+  bool _canSendEmail = true;
+  int _remainingSeconds = 0;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _confirmationCodeController.dispose();
     super.dispose();
+  }
+
+  void _startEmailTimer() {
+    setState(() {
+      _canSendEmail = false;
+      _isConfirmationEnabled = true;
+      _remainingSeconds = 180; // 3 minutes
+    });
+
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _canSendEmail = true;
+          timer.cancel();
+        }
+      });
+    });
   }
 
   @override
@@ -56,6 +81,32 @@ class _RegisterPageState extends State<RegisterPage> {
               CustomInput(
                 controller: _emailController,
                 hintText: 'Email',
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomInput(
+                      controller: _confirmationCodeController,
+                      hintText: 'Confirmation Code',
+                      enabled: _isConfirmationEnabled,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 60,
+                    child: CustomButton(
+                      text: _canSendEmail 
+                          ? 'Send' 
+                          : '${(_remainingSeconds / 60).floor()}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
+                      onPressed: () {
+                        if (_canSendEmail && _emailController.text.isNotEmpty) {
+                          _startEmailTimer();
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               CustomInput(
