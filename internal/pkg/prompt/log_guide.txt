@@ -1,0 +1,1 @@
+This is logs from GDB (GNU Debugger), a powerful debugging tool used for analyzing program behavior and developing exploits. 
