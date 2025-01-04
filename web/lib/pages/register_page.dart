@@ -52,7 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   color: AppColors.greyShade(600),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               CustomInput(
                 controller: _emailController,
                 hintText: 'Email',

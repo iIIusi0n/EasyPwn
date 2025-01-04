@@ -386,7 +386,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
           ),
 
         Positioned(
-          left: 16,
+          right: 16,
           bottom: 16,
           child: Container(
             decoration: BoxDecoration(
