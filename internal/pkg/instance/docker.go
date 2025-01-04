@@ -23,6 +23,11 @@ type BuildOutput struct {
 	ErrorDetail ErrorDetail `json:"errorDetail"`
 }
 
+type ExecInOut struct {
+	Reader io.Reader
+	Writer io.Writer
+}
+
 func newDockerClient(host string) (*client.Client, error) {
 	return client.NewClientWithOpts(
 		client.WithHost(host),
@@ -55,14 +60,6 @@ func buildDockerImage(ctx context.Context, cli *client.Client, dockerfileTar io.
 	return nil
 }
 
-func removeDockerImage(ctx context.Context, cli *client.Client, imageID string) error {
-	_, err := cli.ImageRemove(ctx, imageID, image.RemoveOptions{
-		Force:         true,
-		PruneChildren: true,
-	})
-	return err
-}
-
 func getImages(ctx context.Context, cli *client.Client) ([]image.Summary, error) {
 	images, err := cli.ImageList(ctx, image.ListOptions{})
 	if err != nil {
@@ -89,6 +86,7 @@ func createContainer(ctx context.Context, cli *client.Client, containerName, ima
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
 		Cmd:   []string{"/bin/bash"},
+		Tty:   true,
 	}, &container.HostConfig{
 		Binds: []string{
 			fmt.Sprintf("%s:/work", workPath),
@@ -106,11 +104,46 @@ func startContainer(ctx context.Context, cli *client.Client, containerID string)
 }
 
 func stopContainer(ctx context.Context, cli *client.Client, containerID string) error {
-	return cli.ContainerStop(ctx, containerID, container.StopOptions{})
+	timeout := 5
+	return cli.ContainerStop(ctx, containerID, container.StopOptions{Timeout: &timeout})
 }
 
 func removeContainer(ctx context.Context, cli *client.Client, containerID string) error {
 	return cli.ContainerRemove(ctx, containerID, container.RemoveOptions{
 		Force: true,
+	})
+}
+
+func executeCommand(ctx context.Context, cli *client.Client, containerID, command string) (ExecInOut, error) {
+	execID, err := cli.ContainerExecCreate(ctx, containerID, container.ExecOptions{
+		Cmd:          []string{command},
+		Tty:          true,
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		ConsoleSize:  &[2]uint{24, 80},
+		WorkingDir:   "/work",
+	})
+	if err != nil {
+		return ExecInOut{}, fmt.Errorf("failed to create exec: %v", err)
+	}
+
+	resp, err := cli.ContainerExecAttach(ctx, execID.ID, container.ExecStartOptions{
+		Tty: true,
+	})
+	if err != nil {
+		return ExecInOut{}, fmt.Errorf("failed to attach exec: %v", err)
+	}
+
+	return ExecInOut{
+		Reader: resp.Reader,
+		Writer: resp.Conn,
+	}, nil
+}
+
+func resizeExecTTY(ctx context.Context, cli *client.Client, execID string, size [2]uint) error {
+	return cli.ContainerExecResize(ctx, execID, container.ResizeOptions{
+		Height: size[0],
+		Width:  size[1],
 	})
 }

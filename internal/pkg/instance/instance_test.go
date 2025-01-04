@@ -5,6 +5,8 @@ import (
 	"easypwn/internal/data"
 	"easypwn/internal/pkg/project"
 	"easypwn/internal/pkg/user"
+	"fmt"
+	"io"
 	"os"
 	"testing"
 )
@@ -44,6 +46,26 @@ func TestInstance(t *testing.T) {
 	}
 
 	t.Logf("Instance created: %+v", instance)
+
+	exec, err := instance.Execute(context.Background(), data.GetDB(), "/bin/bash")
+	if err != nil {
+		t.Fatal("Failed to execute command: ", err)
+	}
+
+	_, err = fmt.Fprintf(exec.Writer, "echo 'Hello, World!'\n")
+	if err != nil {
+		t.Fatal("Failed to write to PTY: ", err)
+	}
+	_, err = fmt.Fprintf(exec.Writer, "exit\n")
+	if err != nil {
+		t.Fatal("Failed to write to PTY: ", err)
+	}
+
+	output, err := io.ReadAll(exec.Reader)
+	if err != nil {
+		t.Fatal("Failed to read from PTY: ", err)
+	}
+	t.Logf("Result: %s", output)
 
 	err = instance.Stop()
 	if err != nil {
