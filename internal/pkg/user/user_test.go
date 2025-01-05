@@ -12,6 +12,4 @@ func TestUser(t *testing.T) {
 		t.Fatal("Failed to create user: ", err)
 	}
 	defer u.Delete(context.Background(), data.GetDB())
-
-	t.Logf("User created: %+v", u)
 }

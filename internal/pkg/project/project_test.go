@@ -31,11 +31,9 @@ func TestProject(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	project, err := NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, ubuntu2410, gef)
+	project, err := NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, "test-file.txt", ubuntu2410, gef)
 	if err != nil {
 		t.Fatal("Failed to create project: ", err)
 	}
 	defer project.Delete(context.Background(), data.GetDB())
-
-	t.Logf("Project created: %+v", project)
 }

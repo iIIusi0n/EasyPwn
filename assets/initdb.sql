@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS project (
     name VARCHAR(255) NOT NULL,
     user_id UUID NOT NULL REFERENCES user(id),
     file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
     os_id UUID NOT NULL REFERENCES project_os(id),
     plugin_id UUID NOT NULL REFERENCES project_plugin(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

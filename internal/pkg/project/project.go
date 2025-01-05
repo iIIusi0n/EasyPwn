@@ -11,13 +11,14 @@ type Project struct {
 	Name      string
 	UserID    string
 	FilePath  string
+	FileName  string
 	OsID      string
 	PluginID  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, osID, pluginID string) (*Project, error) {
+func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, fileName, osID, pluginID string) (*Project, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return nil, err
@@ -25,7 +26,7 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, osID, p
 	defer tx.Rollback()
 
 	var projectID string
-	result := tx.QueryRow("INSERT INTO project (name, user_id, file_path, os_id, plugin_id) VALUES (?, ?, ?, ?, ?) RETURNING id", name, userID, filePath, osID, pluginID)
+	result := tx.QueryRow("INSERT INTO project (name, user_id, file_path, file_name, os_id, plugin_id) VALUES (?, ?, ?, ?, ?, ?) RETURNING id", name, userID, filePath, fileName, osID, pluginID)
 	err = result.Scan(&projectID)
 	if err != nil {
 		return nil, err
@@ -40,6 +41,7 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, osID, p
 		Name:      name,
 		UserID:    userID,
 		FilePath:  filePath,
+		FileName:  fileName,
 		OsID:      osID,
 		PluginID:  pluginID,
 		CreatedAt: time.Now(),
@@ -54,6 +56,7 @@ func GetProject(ctx context.Context, db *sql.DB, id string) (*Project, error) {
 		&project.Name,
 		&project.UserID,
 		&project.FilePath,
+		&project.FileName,
 		&project.OsID,
 		&project.PluginID,
 		&project.CreatedAt,

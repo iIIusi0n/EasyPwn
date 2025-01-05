@@ -20,7 +20,7 @@ images:
 
 # run tests
 test:
-	go test -v ./...
+	godotenv -f .env.local go test -v ./... -coverprofile=coverage.out
 
 # run tests for a specific function
 testfunc:

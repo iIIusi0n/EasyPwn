@@ -37,7 +37,6 @@ func TestBuildImage(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to build image: ", err)
 	}
-	t.Log("Image built successfully")
 }
 
 func TestGetImages(t *testing.T) {
@@ -47,13 +46,9 @@ func TestGetImages(t *testing.T) {
 		t.Fatal("Failed to create Docker client: ", err)
 	}
 
-	images, err := getImages(ctx, cli)
+	_, err = getImages(ctx, cli)
 	if err != nil {
 		t.Fatal("Failed to get images: ", err)
-	}
-
-	for _, image := range images {
-		t.Logf("Image: %s", image.ID)
 	}
 }
 
@@ -64,12 +59,10 @@ func TestGetImageNames(t *testing.T) {
 		t.Fatal("Failed to create Docker client: ", err)
 	}
 
-	imageNames, err := getImageNames(ctx, cli)
+	_, err = getImageNames(ctx, cli)
 	if err != nil {
 		t.Fatal("Failed to get image names: ", err)
 	}
-
-	t.Logf("Image names: %v", imageNames)
 }
 
 func TestCreateContainer(t *testing.T) {

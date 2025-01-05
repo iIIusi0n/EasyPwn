@@ -34,7 +34,7 @@ func TestInstance(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	project, err := project.NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, ubuntu2410, gef)
+	project, err := project.NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, "test-file.txt", ubuntu2410, gef)
 	if err != nil {
 		t.Fatal("Failed to create project: ", err)
 	}
@@ -44,8 +44,6 @@ func TestInstance(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to create instance: ", err)
 	}
-
-	t.Logf("Instance created: %+v", instance)
 
 	exec, err := instance.Execute(context.Background(), "/bin/bash")
 	if err != nil {
@@ -65,7 +63,10 @@ func TestInstance(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to read from PTY: ", err)
 	}
-	t.Logf("Result: %s", output)
+
+	if len(output) == 0 {
+		t.Fatal("No output from command")
+	}
 
 	err = instance.Stop()
 	if err != nil {
