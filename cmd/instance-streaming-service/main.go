@@ -58,7 +58,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	r := stream.NewRouter(projectClient, instanceClient)
+	r := stream.NewRouter(stream.RouterClients{
+		ProjectClient:  projectClient,
+		InstanceClient: instanceClient,
+	})
 
 	log.Printf("server listening at %v", lis.Addr())
 	if err := r.Run(fmt.Sprintf(":%s", listenPort)); err != nil {

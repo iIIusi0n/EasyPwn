@@ -1,25 +1,42 @@
 package gateway
 
 import (
-	"net/http"
+	pb "easypwn/internal/api"
+	jwtauth "easypwn/internal/pkg/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter() *gin.Engine {
+type RouterClients struct {
+	Mailer         pb.MailerClient
+	ChatbotClient  pb.ChatbotClient
+	UserClient     pb.UserClient
+	ProjectClient  pb.ProjectClient
+	InstanceClient pb.InstanceClient
+}
+
+func NewRouter(clients RouterClients) *gin.Engine {
 	r := gin.Default()
 
 	auth := r.Group("/auth")
 	{
-		auth.POST("/login")
-		auth.POST("/register")
+		auth.POST("/login", LoginHandler(clients.UserClient))
+		auth.POST("/confirm", ConfirmHandler(clients.Mailer))
+		auth.POST("/register", RegisterHandler(clients.UserClient, clients.Mailer))
 	}
 
 	user := r.Group("/user")
 	{
-		user.GET("/:id", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
-		})
+		user.Use(jwtauth.AuthMiddleware())
+
+		user.GET("/:id")
+	}
+
+	project := r.Group("/project")
+	{
+		project.Use(jwtauth.AuthMiddleware())
+
+		project.GET("/:id")
 	}
 
 	return r

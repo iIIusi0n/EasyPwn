@@ -5,13 +5,22 @@ package easypwn;
 option go_package = "easypwn/internal/api";
 
 service Mailer {
-  rpc SendEmailConfirmation(SendEmailConfirmationRequest) returns (SendEmailConfirmationResponse);
+  rpc SendConfirmationEmail(SendConfirmationEmailRequest) returns (SendConfirmationEmailResponse);
+  rpc GetConfirmationCode(GetConfirmationCodeRequest) returns (GetConfirmationCodeResponse);
 }
 
-message SendEmailConfirmationRequest {
+message SendConfirmationEmailRequest {
   string email = 1;
 }
 
-message SendEmailConfirmationResponse {
+message SendConfirmationEmailResponse {
+  string code = 1;
+}
+
+message GetConfirmationCodeRequest {
+  string email = 1;
+}
+
+message GetConfirmationCodeResponse {
   string code = 1;
 }

@@ -7,10 +7,15 @@ import (
 	"easypwn/internal/pkg/auth"
 )
 
-func NewRouter(projectClient pb.ProjectClient, instanceClient pb.InstanceClient) *gin.Engine {
+type RouterClients struct {
+	ProjectClient  pb.ProjectClient
+	InstanceClient pb.InstanceClient
+}
+
+func NewRouter(clients RouterClients) *gin.Engine {
 	r := gin.Default()
 	r.Use(auth.AuthMiddleware())
-	r.Use(InstanceAuthMiddleware(projectClient, instanceClient))
+	r.Use(InstanceAuthMiddleware(clients.ProjectClient, clients.InstanceClient))
 
 	stream := r.Group("/stream")
 	{

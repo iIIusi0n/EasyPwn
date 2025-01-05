@@ -31,7 +31,7 @@ func NewMailerService(ctx context.Context, config MailerServiceConfig) *MailerSe
 	}
 }
 
-func (s *MailerService) SendEmailConfirmation(ctx context.Context, req *pb.SendEmailConfirmationRequest) (*pb.SendEmailConfirmationResponse, error) {
+func (s *MailerService) SendConfirmationEmail(ctx context.Context, req *pb.SendConfirmationEmailRequest) (*pb.SendConfirmationEmailResponse, error) {
 	exists, err := s.hasRecentConfirmation(ctx, req.Email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check recent confirmations: %v", err)
@@ -50,7 +50,7 @@ func (s *MailerService) SendEmailConfirmation(ctx context.Context, req *pb.SendE
 		return nil, fmt.Errorf("failed to send confirmation email: %v", err)
 	}
 
-	return &pb.SendEmailConfirmationResponse{
+	return &pb.SendConfirmationEmailResponse{
 		Code: code,
 	}, nil
 }
@@ -138,4 +138,24 @@ func (s *MailerService) hasRecentConfirmation(ctx context.Context, email string)
 	}
 
 	return count > 0, nil
+}
+
+func (s *MailerService) GetConfirmationCode(ctx context.Context, req *pb.GetConfirmationCodeRequest) (*pb.GetConfirmationCodeResponse, error) {
+	db := data.GetDB()
+
+	var code string
+	err := db.QueryRowContext(ctx, `
+		SELECT code 
+		FROM email_confirmation 
+		WHERE email = ?
+		AND created_at > DATETIME('now', '-3 minutes')`,
+		req.Email).Scan(&code)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetConfirmationCodeResponse{
+		Code: code,
+	}, nil
 }
