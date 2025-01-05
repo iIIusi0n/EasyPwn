@@ -47,7 +47,7 @@ func TestInstance(t *testing.T) {
 
 	t.Logf("Instance created: %+v", instance)
 
-	exec, err := instance.Execute(context.Background(), data.GetDB(), "/bin/bash")
+	exec, err := instance.Execute(context.Background(), "/bin/bash")
 	if err != nil {
 		t.Fatal("Failed to execute command: ", err)
 	}

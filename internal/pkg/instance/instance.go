@@ -120,10 +120,10 @@ func (i *Instance) GetLogs(ctx context.Context, db *sql.DB, limit int) (string, 
 	return logs, nil
 }
 
-func (i *Instance) Execute(ctx context.Context, db *sql.DB, command string) (ExecInOut, error) {
+func (i *Instance) Execute(ctx context.Context, command string) (ExecInOut, error) {
 	return executeCommand(ctx, cli, i.ContainerID, command)
 }
 
-func (i *Instance) ResizeTTY(ctx context.Context, db *sql.DB, height, width int) error {
-	return resizeExecTTY(ctx, cli, i.ContainerID, [2]uint{uint(height), uint(width)})
+func (i *Instance) ResizeTTY(ctx context.Context, execID string, height, width int) error {
+	return resizeExecTTY(ctx, cli, execID, [2]uint{uint(height), uint(width)})
 }

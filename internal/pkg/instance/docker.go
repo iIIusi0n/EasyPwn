@@ -24,6 +24,7 @@ type BuildOutput struct {
 }
 
 type ExecInOut struct {
+	ExecID string
 	Reader io.Reader
 	Writer io.Writer
 }
@@ -136,6 +137,7 @@ func executeCommand(ctx context.Context, cli *client.Client, containerID, comman
 	}
 
 	return ExecInOut{
+		ExecID: execID.ID,
 		Reader: resp.Reader,
 		Writer: resp.Conn,
 	}, nil
