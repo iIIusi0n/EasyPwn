@@ -14,8 +14,9 @@ message CreateProjectRequest {
     string name = 1;
     string user_id = 2;
     string file_path = 3;
-    string os = 4;
-    string plugin = 5;
+    string file_name = 4;
+    string os = 5;
+    string plugin = 6;
 }
 
 message CreateProjectResponse {
@@ -31,8 +32,9 @@ message GetProjectResponse {
     string name = 2;
     string user_id = 3;
     string file_path = 4;
-    string os = 5;
-    string plugin = 6;
+    string file_name = 5;
+    string os = 6;
+    string plugin = 7;
 }
 
 message DeleteProjectRequest {

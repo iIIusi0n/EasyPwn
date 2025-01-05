@@ -5,6 +5,7 @@ import (
 	pb "easypwn/internal/api"
 	"easypwn/internal/data"
 	"easypwn/internal/pkg/project"
+	"os"
 )
 
 type ProjectService struct {
@@ -18,7 +19,7 @@ func NewProjectService(ctx context.Context) *ProjectService {
 func (s *ProjectService) CreateProject(ctx context.Context, req *pb.CreateProjectRequest) (*pb.CreateProjectResponse, error) {
 	db := data.GetDB()
 
-	project, err := project.NewProject(ctx, db, req.Name, req.UserId, req.FilePath, req.Os, req.Plugin)
+	project, err := project.NewProject(ctx, db, req.Name, req.UserId, req.FilePath, req.FileName, req.Os, req.Plugin)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +57,8 @@ func (s *ProjectService) DeleteProject(ctx context.Context, req *pb.DeleteProjec
 	if err != nil {
 		return nil, err
 	}
+
+	os.RemoveAll(project.FilePath)
 
 	return &pb.DeleteProjectResponse{ProjectId: req.ProjectId}, nil
 }

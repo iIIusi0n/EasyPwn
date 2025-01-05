@@ -18,6 +18,7 @@ jobs:
           - chatbot
           - mailer
           - instance-service
+          - instance-streaming-service
           - project-service
           - user-service
           - web

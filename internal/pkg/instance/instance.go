@@ -119,3 +119,11 @@ func (i *Instance) GetLogs(ctx context.Context, db *sql.DB, limit int) (string, 
 	}
 	return logs, nil
 }
+
+func (i *Instance) Execute(ctx context.Context, command ...string) (ExecInOut, error) {
+	return executeCommand(ctx, cli, i.ContainerID, command...)
+}
+
+func (i *Instance) ResizeTTY(ctx context.Context, execID string, height, width uint) error {
+	return resizeExecTTY(ctx, cli, execID, [2]uint{height, width})
+}

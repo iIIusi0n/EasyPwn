@@ -23,7 +23,7 @@ func TestSendEmailConfirmation(t *testing.T) {
 	mailerService := NewMailerService(ctx, config)
 
 	t.Run("SuccessfulSend", func(t *testing.T) {
-		resp, err := mailerService.SendEmailConfirmation(ctx, &pb.SendEmailConfirmationRequest{
+		resp, err := mailerService.SendConfirmationEmail(ctx, &pb.SendConfirmationEmailRequest{
 			Email: "test@example.com",
 		})
 
@@ -38,7 +38,7 @@ func TestSendEmailConfirmation(t *testing.T) {
 	})
 
 	t.Run("DuplicateRequest", func(t *testing.T) {
-		_, err := mailerService.SendEmailConfirmation(ctx, &pb.SendEmailConfirmationRequest{
+		_, err := mailerService.SendConfirmationEmail(ctx, &pb.SendConfirmationEmailRequest{
 			Email: "duplicate@example.com",
 		})
 		if err != nil {
@@ -46,7 +46,7 @@ func TestSendEmailConfirmation(t *testing.T) {
 			return
 		}
 
-		_, err = mailerService.SendEmailConfirmation(ctx, &pb.SendEmailConfirmationRequest{
+		_, err = mailerService.SendConfirmationEmail(ctx, &pb.SendConfirmationEmailRequest{
 			Email: "duplicate@example.com",
 		})
 		if err == nil {
@@ -55,7 +55,7 @@ func TestSendEmailConfirmation(t *testing.T) {
 	})
 
 	t.Run("InvalidEmail", func(t *testing.T) {
-		_, err := mailerService.SendEmailConfirmation(ctx, &pb.SendEmailConfirmationRequest{
+		_, err := mailerService.SendConfirmationEmail(ctx, &pb.SendConfirmationEmailRequest{
 			Email: "",
 		})
 		if err == nil {

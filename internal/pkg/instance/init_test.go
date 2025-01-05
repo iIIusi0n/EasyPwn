@@ -11,8 +11,6 @@ func TestInitImages(t *testing.T) {
 		t.Fatal("Failed to get image names: ", err)
 	}
 
-	t.Logf("Found %d images", len(imageNames))
-
 	for _, imageName := range imageNames {
 		if imageName == "easypwn/ubuntu-2410:gef" {
 			return

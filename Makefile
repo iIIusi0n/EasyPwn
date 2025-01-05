@@ -20,12 +20,13 @@ images:
 
 # run tests
 test:
-	go test -v ./...
+	godotenv -f .env.local go test -v ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
 
-# run tests for a specific function
-testfunc:
-	@if [ -z "$(func)" ]; then \
-		echo "Usage: make testfunc func=TestFunctionName"; \
+# run tests for a specific package
+testpackage:
+	@if [ -z "$(package)" ]; then \
+		echo "Usage: make testpackage package=PackageName"; \
 		exit 1; \
 	fi
-	go test -v ./... -run $(func)
+	godotenv -f .env.local go test -v ./$(package)

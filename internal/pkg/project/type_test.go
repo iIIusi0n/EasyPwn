@@ -9,11 +9,10 @@ func TestPluginTranslation(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to get plugin ID: ", err)
 	}
-	name, err := GetPluginNameFromID(id)
+	_, err = GetPluginNameFromID(id)
 	if err != nil {
 		t.Fatal("Failed to get plugin name: ", err)
 	}
-	t.Logf("Plugin name: %s", name)
 }
 
 func TestOsTranslation(t *testing.T) {
@@ -21,9 +20,8 @@ func TestOsTranslation(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to get os ID: ", err)
 	}
-	name, err := GetOsNameFromID(id)
+	_, err = GetOsNameFromID(id)
 	if err != nil {
 		t.Fatal("Failed to get os name: ", err)
 	}
-	t.Logf("OS name: %s", name)
 }

@@ -90,7 +90,5 @@ func TestChatbotService(t *testing.T) {
 		if response == "" {
 			t.Error("ExecuteCompletion() returned empty response")
 		}
-
-		t.Logf("ExecuteCompletion() response = %v", response)
 	})
 }

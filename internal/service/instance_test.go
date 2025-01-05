@@ -35,7 +35,7 @@ func TestInstanceService(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	project, err := project.NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, ubuntu2410, gef)
+	project, err := project.NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, "test-file.txt", ubuntu2410, gef)
 	if err != nil {
 		t.Fatal("Failed to create project: ", err)
 	}
@@ -49,15 +49,13 @@ func TestInstanceService(t *testing.T) {
 		return
 	}
 
-	getInstanceResponse, err := instanceService.GetInstance(context.Background(), &pb.GetInstanceRequest{
+	_, err = instanceService.GetInstance(context.Background(), &pb.GetInstanceRequest{
 		InstanceId: createInstanceResponse.InstanceId,
 	})
 	if err != nil {
 		t.Errorf("GetInstance() error = %v", err)
 		return
 	}
-
-	t.Logf("Instance created: %+v", getInstanceResponse)
 
 	instanceService.DeleteInstance(context.Background(), &pb.DeleteInstanceRequest{
 		InstanceId: createInstanceResponse.InstanceId,

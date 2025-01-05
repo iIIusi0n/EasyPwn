@@ -5,6 +5,8 @@ import (
 	"easypwn/internal/data"
 	"easypwn/internal/pkg/project"
 	"easypwn/internal/pkg/user"
+	"fmt"
+	"io"
 	"os"
 	"testing"
 )
@@ -32,7 +34,7 @@ func TestInstance(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	project, err := project.NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, ubuntu2410, gef)
+	project, err := project.NewProject(context.Background(), data.GetDB(), "test-project", u.ID, tempDir, "test-file.txt", ubuntu2410, gef)
 	if err != nil {
 		t.Fatal("Failed to create project: ", err)
 	}
@@ -43,7 +45,28 @@ func TestInstance(t *testing.T) {
 		t.Fatal("Failed to create instance: ", err)
 	}
 
-	t.Logf("Instance created: %+v", instance)
+	exec, err := instance.Execute(context.Background(), "/bin/bash")
+	if err != nil {
+		t.Fatal("Failed to execute command: ", err)
+	}
+
+	_, err = fmt.Fprintf(exec.Writer, "echo 'Hello, World!'\n")
+	if err != nil {
+		t.Fatal("Failed to write to PTY: ", err)
+	}
+	_, err = fmt.Fprintf(exec.Writer, "exit\n")
+	if err != nil {
+		t.Fatal("Failed to write to PTY: ", err)
+	}
+
+	output, err := io.ReadAll(exec.Reader)
+	if err != nil {
+		t.Fatal("Failed to read from PTY: ", err)
+	}
+
+	if len(output) == 0 {
+		t.Fatal("No output from command")
+	}
 
 	err = instance.Stop()
 	if err != nil {

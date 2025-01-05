@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Mailer_SendEmailConfirmation_FullMethodName = "/easypwn.Mailer/SendEmailConfirmation"
+	Mailer_SendConfirmationEmail_FullMethodName = "/easypwn.Mailer/SendConfirmationEmail"
+	Mailer_GetConfirmationCode_FullMethodName   = "/easypwn.Mailer/GetConfirmationCode"
 )
 
 // MailerClient is the client API for Mailer service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MailerClient interface {
-	SendEmailConfirmation(ctx context.Context, in *SendEmailConfirmationRequest, opts ...grpc.CallOption) (*SendEmailConfirmationResponse, error)
+	SendConfirmationEmail(ctx context.Context, in *SendConfirmationEmailRequest, opts ...grpc.CallOption) (*SendConfirmationEmailResponse, error)
+	GetConfirmationCode(ctx context.Context, in *GetConfirmationCodeRequest, opts ...grpc.CallOption) (*GetConfirmationCodeResponse, error)
 }
 
 type mailerClient struct {
@@ -37,10 +39,20 @@ func NewMailerClient(cc grpc.ClientConnInterface) MailerClient {
 	return &mailerClient{cc}
 }
 
-func (c *mailerClient) SendEmailConfirmation(ctx context.Context, in *SendEmailConfirmationRequest, opts ...grpc.CallOption) (*SendEmailConfirmationResponse, error) {
+func (c *mailerClient) SendConfirmationEmail(ctx context.Context, in *SendConfirmationEmailRequest, opts ...grpc.CallOption) (*SendConfirmationEmailResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SendEmailConfirmationResponse)
-	err := c.cc.Invoke(ctx, Mailer_SendEmailConfirmation_FullMethodName, in, out, cOpts...)
+	out := new(SendConfirmationEmailResponse)
+	err := c.cc.Invoke(ctx, Mailer_SendConfirmationEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mailerClient) GetConfirmationCode(ctx context.Context, in *GetConfirmationCodeRequest, opts ...grpc.CallOption) (*GetConfirmationCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetConfirmationCodeResponse)
+	err := c.cc.Invoke(ctx, Mailer_GetConfirmationCode_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +63,8 @@ func (c *mailerClient) SendEmailConfirmation(ctx context.Context, in *SendEmailC
 // All implementations must embed UnimplementedMailerServer
 // for forward compatibility.
 type MailerServer interface {
-	SendEmailConfirmation(context.Context, *SendEmailConfirmationRequest) (*SendEmailConfirmationResponse, error)
+	SendConfirmationEmail(context.Context, *SendConfirmationEmailRequest) (*SendConfirmationEmailResponse, error)
+	GetConfirmationCode(context.Context, *GetConfirmationCodeRequest) (*GetConfirmationCodeResponse, error)
 	mustEmbedUnimplementedMailerServer()
 }
 
@@ -62,8 +75,11 @@ type MailerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMailerServer struct{}
 
-func (UnimplementedMailerServer) SendEmailConfirmation(context.Context, *SendEmailConfirmationRequest) (*SendEmailConfirmationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendEmailConfirmation not implemented")
+func (UnimplementedMailerServer) SendConfirmationEmail(context.Context, *SendConfirmationEmailRequest) (*SendConfirmationEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendConfirmationEmail not implemented")
+}
+func (UnimplementedMailerServer) GetConfirmationCode(context.Context, *GetConfirmationCodeRequest) (*GetConfirmationCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfirmationCode not implemented")
 }
 func (UnimplementedMailerServer) mustEmbedUnimplementedMailerServer() {}
 func (UnimplementedMailerServer) testEmbeddedByValue()                {}
@@ -86,20 +102,38 @@ func RegisterMailerServer(s grpc.ServiceRegistrar, srv MailerServer) {
 	s.RegisterService(&Mailer_ServiceDesc, srv)
 }
 
-func _Mailer_SendEmailConfirmation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEmailConfirmationRequest)
+func _Mailer_SendConfirmationEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendConfirmationEmailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MailerServer).SendEmailConfirmation(ctx, in)
+		return srv.(MailerServer).SendConfirmationEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Mailer_SendEmailConfirmation_FullMethodName,
+		FullMethod: Mailer_SendConfirmationEmail_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MailerServer).SendEmailConfirmation(ctx, req.(*SendEmailConfirmationRequest))
+		return srv.(MailerServer).SendConfirmationEmail(ctx, req.(*SendConfirmationEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Mailer_GetConfirmationCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfirmationCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MailerServer).GetConfirmationCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Mailer_GetConfirmationCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MailerServer).GetConfirmationCode(ctx, req.(*GetConfirmationCodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +146,12 @@ var Mailer_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MailerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendEmailConfirmation",
-			Handler:    _Mailer_SendEmailConfirmation_Handler,
+			MethodName: "SendConfirmationEmail",
+			Handler:    _Mailer_SendConfirmationEmail_Handler,
+		},
+		{
+			MethodName: "GetConfirmationCode",
+			Handler:    _Mailer_GetConfirmationCode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
