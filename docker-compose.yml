@@ -78,5 +78,13 @@ services:
       retries: 5
       start_period: 30s
 
+  caddy:
+    image: caddy:2.7.4-alpine
+    volumes:
+      - ./assets/caddy:/etc/caddy
+    ports:
+      - 80:80
+      - 443:443
+
 volumes:
   mysql_data:
