@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"easypwn/internal/handler"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,8 +11,8 @@ func NewRouter() *gin.Engine {
 
 	auth := r.Group("/auth")
 	{
-		auth.POST("/login", handler.AuthLogin)
-		auth.POST("/register", handler.AuthRegister)
+		auth.POST("/login")
+		auth.POST("/register")
 	}
 
 	user := r.Group("/user")

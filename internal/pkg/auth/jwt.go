@@ -2,8 +2,10 @@ package auth
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -63,4 +65,38 @@ func Decode(token string) (*Token, error) {
 
 func (t *Token) IsExpired() bool {
 	return time.Now().Unix() > t.Exp
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			c.Abort()
+			return
+		}
+
+		if len(authHeader) <= 7 || authHeader[:7] != "Bearer " {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+			c.Abort()
+			return
+		}
+
+		token := authHeader[7:]
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token is required"})
+			c.Abort()
+			return
+		}
+
+		claims, err := Decode(token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Next()
+	}
 }

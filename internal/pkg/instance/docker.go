@@ -115,9 +115,9 @@ func removeContainer(ctx context.Context, cli *client.Client, containerID string
 	})
 }
 
-func executeCommand(ctx context.Context, cli *client.Client, containerID, command string) (ExecInOut, error) {
+func executeCommand(ctx context.Context, cli *client.Client, containerID string, command ...string) (ExecInOut, error) {
 	execID, err := cli.ContainerExecCreate(ctx, containerID, container.ExecOptions{
-		Cmd:          []string{command},
+		Cmd:          command,
 		Tty:          true,
 		AttachStdin:  true,
 		AttachStdout: true,
