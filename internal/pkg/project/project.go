@@ -77,6 +77,23 @@ func GetProject(ctx context.Context, db *sql.DB, id string) (*Project, error) {
 	return project, nil
 }
 
+func GetProjects(ctx context.Context, db *sql.DB, userID string) ([]*Project, error) {
+	projects := []*Project{}
+	rows, err := db.Query("SELECT * FROM project WHERE user_id = UUID_TO_BIN(?)", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var project Project
+		if err := rows.Scan(&project.ID, &project.Name, &project.UserID, &project.FilePath, &project.FileName, &project.OsID, &project.PluginID, &project.CreatedAt, &project.UpdatedAt); err != nil {
+			return nil, err
+		}
+		projects = append(projects, &project)
+	}
+	return projects, nil
+}
+
 func (p *Project) Delete(ctx context.Context, db *sql.DB) error {
 	tx, err := db.Begin()
 	if err != nil {

@@ -36,7 +36,10 @@ func NewRouter(clients RouterClients) *gin.Engine {
 	{
 		project.Use(jwtauth.AuthMiddleware())
 
-		project.GET("/:id")
+		project.GET("/os", GetOsListHandler(clients.ProjectClient))
+		project.GET("/plugin", GetPluginListHandler(clients.ProjectClient))
+
+		project.DELETE("/:id")
 	}
 
 	return r

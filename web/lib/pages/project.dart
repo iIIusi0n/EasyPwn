@@ -216,7 +216,7 @@ class _ProjectPageState extends State<ProjectPage> {
           onPressed: () {
             // TODO: Create new session
           },
-          child: const Text('New Session'),
+          child: const Text('New Instance'),
         ),
         const SizedBox(width: 8),
         OutlinedButton(

@@ -19,7 +19,7 @@ func NewProjectService(ctx context.Context) *ProjectService {
 func (s *ProjectService) CreateProject(ctx context.Context, req *pb.CreateProjectRequest) (*pb.CreateProjectResponse, error) {
 	db := data.GetDB()
 
-	project, err := project.NewProject(ctx, db, req.Name, req.UserId, req.FilePath, req.FileName, req.Os, req.Plugin)
+	project, err := project.NewProject(ctx, db, req.Name, req.UserId, req.FilePath, req.FileName, req.OsId, req.PluginId)
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +40,32 @@ func (s *ProjectService) GetProject(ctx context.Context, req *pb.GetProjectReque
 		Name:      project.Name,
 		UserId:    project.UserID,
 		FilePath:  project.FilePath,
-		Os:        project.OsID,
-		Plugin:    project.PluginID,
+		OsId:      project.OsID,
+		PluginId:  project.PluginID,
 	}, nil
+}
+
+func (s *ProjectService) GetProjects(ctx context.Context, req *pb.GetProjectsRequest) (*pb.GetProjectsResponse, error) {
+	db := data.GetDB()
+
+	projects, err := project.GetProjects(ctx, db, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &pb.GetProjectsResponse{}
+	for _, project := range projects {
+		response.Projects = append(response.Projects, &pb.GetProjectResponse{
+			ProjectId: project.ID,
+			Name:      project.Name,
+			UserId:    project.UserID,
+			FilePath:  project.FilePath,
+			FileName:  project.FileName,
+			OsId:      project.OsID,
+			PluginId:  project.PluginID,
+		})
+	}
+	return response, nil
 }
 
 func (s *ProjectService) DeleteProject(ctx context.Context, req *pb.DeleteProjectRequest) (*pb.DeleteProjectResponse, error) {
@@ -61,4 +84,30 @@ func (s *ProjectService) DeleteProject(ctx context.Context, req *pb.DeleteProjec
 	os.RemoveAll(project.FilePath)
 
 	return &pb.DeleteProjectResponse{ProjectId: req.ProjectId}, nil
+}
+
+func (s *ProjectService) GetOsList(ctx context.Context, req *pb.GetOsListRequest) (*pb.GetOsListResponse, error) {
+	oss, err := project.GetOsList()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &pb.GetOsListResponse{}
+	for _, os := range oss {
+		response.Oss = append(response.Oss, &pb.GetOsResponse{Id: os.ID, Name: os.Name})
+	}
+	return response, nil
+}
+
+func (s *ProjectService) GetPluginList(ctx context.Context, req *pb.GetPluginListRequest) (*pb.GetPluginListResponse, error) {
+	plugins, err := project.GetPluginList()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &pb.GetPluginListResponse{}
+	for _, plugin := range plugins {
+		response.Plugins = append(response.Plugins, &pb.GetPluginResponse{Id: plugin.ID, Name: plugin.Name})
+	}
+	return response, nil
 }
