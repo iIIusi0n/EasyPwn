@@ -10,6 +10,13 @@ services:
     build:
       context: .
       dockerfile: cmd/api-gateway/Dockerfile
+    environment:
+      - API_LISTEN_PORT=${API_LISTEN_PORT}
+      - USER_LISTEN_HOST=${USER_LISTEN_HOST}
+      - USER_LISTEN_PORT=${USER_LISTEN_PORT}
+      - MAILER_LISTEN_HOST=${MAILER_LISTEN_HOST}
+      - MAILER_LISTEN_PORT=${MAILER_LISTEN_PORT}
+      - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
     depends_on:
       - chatbot
       - mailer
@@ -22,20 +29,39 @@ services:
     build:
       context: .
       dockerfile: cmd/chatbot/Dockerfile
+    environment:
+      - CHATBOT_OPENAI_API_KEY=${CHATBOT_OPENAI_API_KEY}
+      - CHATBOT_LISTEN_PORT=${CHATBOT_LISTEN_PORT}
+      - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - instance-service
+      - db
 
   mailer:
     image: easypwn/mailer
     build:
       context: .
       dockerfile: cmd/mailer/Dockerfile
+    environment:
+      - MAILER_LISTEN_PORT=${MAILER_LISTEN_PORT}
+      - MAILER_SMTP_HOST=${MAILER_SMTP_HOST}
+      - MAILER_SMTP_TLS_PORT=${MAILER_SMTP_TLS_PORT}
+      - MAILER_SMTP_USER=${MAILER_SMTP_USER}
+      - MAILER_SMTP_PASS=${MAILER_SMTP_PASS}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - db
 
   user-service:
     image: easypwn/user-service
     build:
       context: .
       dockerfile: cmd/user-service/Dockerfile
+    environment:
+      - USER_LISTEN_PORT=${USER_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - db
 
@@ -44,6 +70,9 @@ services:
     build:
       context: .
       dockerfile: cmd/project-service/Dockerfile
+    environment:
+      - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - db
 
@@ -52,6 +81,10 @@ services:
     build:
       context: .
       dockerfile: cmd/instance-service/Dockerfile
+    environment:
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
@@ -62,12 +95,28 @@ services:
     build:
       context: .
       dockerfile: cmd/instance-streaming-service/Dockerfile
+    environment:
+      - INSTANCE_STREAMING_SERVICE_LISTEN_PORT=${INSTANCE_STREAMING_SERVICE_LISTEN_PORT}
+      - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - PROJECT_LISTEN_HOST=${PROJECT_LISTEN_HOST}
+      - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
+      - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - project-service
       - instance-service
 
   db:
     image: mysql:9.1
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - ./assets/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
       - mysql_data:/var/lib/mysql
@@ -80,6 +129,13 @@ services:
 
   caddy:
     image: caddy:2.7.4-alpine
+    environment:
+      - CADDY_DOMAIN=${CADDY_DOMAIN}
+      - INSTANCE_STREAMING_SERVICE_LISTEN_HOST=${INSTANCE_STREAMING_SERVICE_LISTEN_HOST}
+      - INSTANCE_STREAMING_SERVICE_LISTEN_PORT=${INSTANCE_STREAMING_SERVICE_LISTEN_PORT}
+      - API_LISTEN_HOST=${API_LISTEN_HOST}
+      - API_LISTEN_PORT=${API_LISTEN_PORT}
+      - WEB_LISTEN_HOST=${WEB_LISTEN_HOST}
     volumes:
       - ./assets/caddy:/etc/caddy
     ports:

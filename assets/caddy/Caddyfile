@@ -1,11 +1,11 @@
 {$CADDY_DOMAIN} {
     handle_path /api/* {
         handle /stream/* {
-            reverse_proxy {$INSTANCE_STREAMING_SERVICE_HOST}:{$INSTANCE_STREAMING_SERVICE_PORT}
+            reverse_proxy {$INSTANCE_STREAMING_SERVICE_LISTEN_HOST}:{$INSTANCE_STREAMING_SERVICE_LISTEN_PORT}
         }
 
-        reverse_proxy {$API_GATEWAY_HOST}:{$API_GATEWAY_PORT}
+        reverse_proxy {$API_LISTEN_HOST}:{$API_LISTEN_PORT}
     }
 
-    reverse_proxy web:8080
+    reverse_proxy {$WEB_LISTEN_HOST}:8080
 }

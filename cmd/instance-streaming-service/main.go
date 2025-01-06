@@ -10,6 +10,7 @@ import (
 	"easypwn/internal/api/stream"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -37,7 +38,7 @@ func init() {
 }
 
 func main() {
-	instanceClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", instanceListenHost, instanceListenPort))
+	instanceClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", instanceListenHost, instanceListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to instance: %v", err)
 	}
@@ -45,7 +46,7 @@ func main() {
 
 	instanceClient := pb.NewInstanceClient(instanceClientConn)
 
-	projectClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", projectListenHost, projectListenPort))
+	projectClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", projectListenHost, projectListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to project: %v", err)
 	}

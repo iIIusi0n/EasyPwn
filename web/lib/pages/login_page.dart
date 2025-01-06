@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../components/elements/custom_input.dart';
 import '../components/elements/custom_button.dart';
 import '../constants/colors.dart';
+import '../services/auth_service.dart';
+
+const _storage = FlutterSecureStorage();
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +18,9 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -21,6 +28,36 @@ class _LoginPageState extends State<LoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
+
+  VoidCallback get _handleLogin => () async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final token = await _authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+      
+      _storage.write(key: 'token', value: token);
+      
+      if (mounted) {
+        context.go('/projects');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Invalid email or password';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -51,22 +88,33 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 32),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
               CustomInput(
                 controller: _emailController,
                 hintText: 'Email',
+                enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
               CustomInput(
                 controller: _passwordController,
                 hintText: 'Password',
                 isPassword: true,
+                enabled: !_isLoading,
               ),
               const SizedBox(height: 24),
               CustomButton(
-                text: 'Sign In',
-                onPressed: () {
-                  // Add login logic
-                },
+                text: _isLoading ? 'Signing in...' : 'Sign In',
+                onPressed: _isLoading ? (() {}) : _handleLogin,
               ),
               const SizedBox(height: 24),
               Row(
