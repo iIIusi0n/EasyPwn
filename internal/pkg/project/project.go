@@ -30,7 +30,10 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, fileNam
 		return nil, err
 	}
 
-	_, err = tx.Exec("INSERT INTO project (id, name, user_id, file_path, file_name, os_id, plugin_id) VALUES (UUID_TO_BIN(@uuid), ?, UUID_TO_BIN(?), ?, ?, UUID_TO_BIN(?), UUID_TO_BIN(?)", name, userID, filePath, fileName, osID, pluginID)
+	_, err = tx.Exec(`
+		INSERT INTO project (id, name, user_id, file_path, file_name, os_id, plugin_id) 
+		VALUES (UUID_TO_BIN(@uuid), ?, UUID_TO_BIN(?), ?, ?, UUID_TO_BIN(?), UUID_TO_BIN(?))
+	`, name, userID, filePath, fileName, osID, pluginID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +97,17 @@ func GetProjects(ctx context.Context, db *sql.DB, userID string) ([]*Project, er
 	}
 	defer rows.Close()
 	for rows.Next() {
+		var createdAt, updatedAt string
 		var project Project
-		if err := rows.Scan(&project.ID, &project.Name, &project.UserID, &project.FilePath, &project.FileName, &project.OsID, &project.PluginID, &project.CreatedAt, &project.UpdatedAt); err != nil {
+		if err := rows.Scan(&project.ID, &project.Name, &project.UserID, &project.FilePath, &project.FileName, &project.OsID, &project.PluginID, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		project.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return nil, err
+		}
+		project.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
+		if err != nil {
 			return nil, err
 		}
 		projects = append(projects, &project)
