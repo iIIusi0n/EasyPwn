@@ -25,17 +25,17 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, fileNam
 	}
 	defer tx.Rollback()
 
+	_, err = tx.Exec("SELECT UUID() INTO @uuid")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = tx.Exec("INSERT INTO project (id, name, user_id, file_path, file_name, os_id, plugin_id) VALUES (UUID_TO_BIN(@uuid), ?, UUID_TO_BIN(?), ?, ?, UUID_TO_BIN(?), UUID_TO_BIN(?)", name, userID, filePath, fileName, osID, pluginID)
+	if err != nil {
+		return nil, err
+	}
+
 	var projectID string
-	err = tx.QueryRow("SELECT UUID() INTO @uuid").Scan(&projectID)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = tx.Exec("INSERT INTO project (id, name, user_id, file_path, file_name, os_id, plugin_id) VALUES (UUID_TO_BIN(@uuid), ?, ?, ?, ?, ?, ?)", name, userID, filePath, fileName, osID, pluginID)
-	if err != nil {
-		return nil, err
-	}
-
 	err = tx.QueryRow("SELECT @uuid").Scan(&projectID)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,8 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, fileNam
 
 func GetProject(ctx context.Context, db *sql.DB, id string) (*Project, error) {
 	project := &Project{}
-	err := db.QueryRow("SELECT * FROM project WHERE id = UUID_TO_BIN(?)", id).Scan(
+	var createdAt, updatedAt string
+	err := db.QueryRow("SELECT BIN_TO_UUID(id), name, BIN_TO_UUID(user_id), file_path, file_name, BIN_TO_UUID(os_id), BIN_TO_UUID(plugin_id), DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM project WHERE id = UUID_TO_BIN(?)", id).Scan(
 		&project.ID,
 		&project.Name,
 		&project.UserID,
@@ -68,9 +69,17 @@ func GetProject(ctx context.Context, db *sql.DB, id string) (*Project, error) {
 		&project.FileName,
 		&project.OsID,
 		&project.PluginID,
-		&project.CreatedAt,
-		&project.UpdatedAt,
+		&createdAt,
+		&updatedAt,
 	)
+	if err != nil {
+		return nil, err
+	}
+	project.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	project.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +88,7 @@ func GetProject(ctx context.Context, db *sql.DB, id string) (*Project, error) {
 
 func GetProjects(ctx context.Context, db *sql.DB, userID string) ([]*Project, error) {
 	projects := []*Project{}
-	rows, err := db.Query("SELECT * FROM project WHERE user_id = UUID_TO_BIN(?)", userID)
+	rows, err := db.Query("SELECT BIN_TO_UUID(id), name, BIN_TO_UUID(user_id), file_path, file_name, BIN_TO_UUID(os_id), BIN_TO_UUID(plugin_id), DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM project WHERE user_id = UUID_TO_BIN(?)", userID)
 	if err != nil {
 		return nil, err
 	}

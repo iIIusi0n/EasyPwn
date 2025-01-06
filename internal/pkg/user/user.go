@@ -57,10 +57,19 @@ func NewUser(ctx context.Context, db *sql.DB, email, password string) (*User, er
 }
 
 func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {
-	row := db.QueryRow("SELECT BIN_TO_UUID(id), email, password_hash, created_at, updated_at FROM user WHERE id = UUID_TO_BIN(?)", id)
+	var createdAt, updatedAt string
+	row := db.QueryRow("SELECT BIN_TO_UUID(id), email, password_hash, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM user WHERE id = UUID_TO_BIN(?)", id)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Email, &user.Password, &createdAt, &updatedAt)
+	if err != nil {
+		return nil, err
+	}
+	user.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	user.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +77,19 @@ func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {
 }
 
 func GetUserByEmail(ctx context.Context, db *sql.DB, email string) (*User, error) {
-	row := db.QueryRow("SELECT BIN_TO_UUID(id), email, password_hash, created_at, updated_at FROM user WHERE email = ?", email)
+	var createdAt, updatedAt string
+	row := db.QueryRow("SELECT BIN_TO_UUID(id), email, password_hash, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM user WHERE email = ?", email)
 
 	var user User
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.Email, &user.Password, &createdAt, &updatedAt)
+	if err != nil {
+		return nil, err
+	}
+	user.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	user.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 	if err != nil {
 		return nil, err
 	}

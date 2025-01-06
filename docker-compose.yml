@@ -16,7 +16,16 @@ services:
       - USER_LISTEN_PORT=${USER_LISTEN_PORT}
       - MAILER_LISTEN_HOST=${MAILER_LISTEN_HOST}
       - MAILER_LISTEN_PORT=${MAILER_LISTEN_PORT}
+      - PROJECT_LISTEN_HOST=${PROJECT_LISTEN_HOST}
+      - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
+      - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - CHATBOT_LISTEN_HOST=${CHATBOT_LISTEN_HOST}
+      - CHATBOT_LISTEN_PORT=${CHATBOT_LISTEN_PORT}
       - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - easypwn_data:/var/lib/easypwn
     depends_on:
       - chatbot
       - mailer
@@ -86,6 +95,7 @@ services:
       - DOCKER_HOST=${DOCKER_HOST}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - easypwn_data:/var/lib/easypwn
     depends_on:
       mysqldb:
         condition: service_healthy
@@ -101,6 +111,7 @@ services:
       - DOCKER_HOST=${DOCKER_HOST}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - easypwn_data:/var/lib/easypwn
     depends_on:
       mysqldb:
         condition: service_healthy
@@ -121,6 +132,7 @@ services:
       - DOCKER_HOST=${DOCKER_HOST}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - easypwn_data:/var/lib/easypwn
     depends_on:
       - project-service
       - instance-service
@@ -132,6 +144,7 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=UTC
     volumes:
       - ./assets/mysql:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
@@ -158,3 +171,4 @@ services:
 
 volumes:
   mysql_data:
+  easypwn_data:

@@ -18,8 +18,8 @@ class ProjectPage extends StatefulWidget {
 
 class _ProjectPageState extends State<ProjectPage> {
   final _nameController = TextEditingController();
-  String? selectedOs = 'ubuntu-2410';
-  String? selectedPlugin = 'gef';
+  String? selectedOs;
+  String? selectedPlugin;
   String? selectedFileName;
   PlatformFile? selectedFile;
 
@@ -59,6 +59,13 @@ class _ProjectPageState extends State<ProjectPage> {
           pluginList = futures[2] as List<Plugin>;
           _isLoading = false;
         });
+
+        if (osList.isNotEmpty) {
+          selectedOs = osList.first.id;
+        }
+        if (pluginList.isNotEmpty) {
+          selectedPlugin = pluginList.first.id;
+        }
       }
     } catch (e) {
       if (mounted) context.go('/login');
@@ -72,15 +79,24 @@ class _ProjectPageState extends State<ProjectPage> {
   }
 
   Future<void> _handleCreateProject() async {
-    if (selectedFile == null) return;
+    if (_nameController.text.isEmpty ||
+        selectedOs == null ||
+        selectedPlugin == null ||
+        selectedFile == null ||
+        selectedFile!.bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
     
     try {
       final _ = await _projectService.createProject(
         _nameController.text,
         selectedOs!,
         selectedPlugin!,
+        selectedFile!.bytes!,
         selectedFile!.name,
-        selectedFile!.path!,
       );
       
       final updatedProjects = await _projectService.getProjects();

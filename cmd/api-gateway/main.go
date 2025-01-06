@@ -19,6 +19,15 @@ var (
 
 	mailerListenHost = os.Getenv("MAILER_LISTEN_HOST")
 	mailerListenPort = os.Getenv("MAILER_LISTEN_PORT")
+
+	projectListenHost = os.Getenv("PROJECT_LISTEN_HOST")
+	projectListenPort = os.Getenv("PROJECT_LISTEN_PORT")
+
+	instanceListenHost = os.Getenv("INSTANCE_LISTEN_HOST")
+	instanceListenPort = os.Getenv("INSTANCE_LISTEN_PORT")
+
+	chatbotListenHost = os.Getenv("CHATBOT_LISTEN_HOST")
+	chatbotListenPort = os.Getenv("CHATBOT_LISTEN_PORT")
 )
 
 func init() {
@@ -32,6 +41,18 @@ func init() {
 
 	if mailerListenHost == "" || mailerListenPort == "" {
 		log.Fatalf("MAILER_LISTEN_HOST and MAILER_LISTEN_PORT must be set")
+	}
+
+	if projectListenHost == "" || projectListenPort == "" {
+		log.Fatalf("PROJECT_LISTEN_HOST and PROJECT_LISTEN_PORT must be set")
+	}
+
+	if instanceListenHost == "" || instanceListenPort == "" {
+		log.Fatalf("INSTANCE_LISTEN_HOST and INSTANCE_LISTEN_PORT must be set")
+	}
+
+	if chatbotListenHost == "" || chatbotListenPort == "" {
+		log.Fatalf("CHATBOT_LISTEN_HOST and CHATBOT_LISTEN_PORT must be set")
 	}
 }
 
@@ -52,9 +73,36 @@ func main() {
 
 	mailerClient := pb.NewMailerClient(mailerClientConn)
 
+	projectClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", projectListenHost, projectListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to project: %v", err)
+	}
+	defer projectClientConn.Close()
+
+	projectClient := pb.NewProjectClient(projectClientConn)
+
+	instanceClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", instanceListenHost, instanceListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to instance: %v", err)
+	}
+	defer instanceClientConn.Close()
+
+	instanceClient := pb.NewInstanceClient(instanceClientConn)
+
+	chatbotClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", chatbotListenHost, chatbotListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect to chatbot: %v", err)
+	}
+	defer chatbotClientConn.Close()
+
+	chatbotClient := pb.NewChatbotClient(chatbotClientConn)
+
 	r := gateway.NewRouter(gateway.RouterClients{
-		UserClient: userClient,
-		Mailer:     mailerClient,
+		UserClient:     userClient,
+		Mailer:         mailerClient,
+		ProjectClient:  projectClient,
+		InstanceClient: instanceClient,
+		ChatbotClient:  chatbotClient,
 	})
 
 	if err := r.Run(fmt.Sprintf(":%s", listenPort)); err != nil {

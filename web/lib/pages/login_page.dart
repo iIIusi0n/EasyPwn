@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text,
       );
       
-      _storage.write(key: 'token', value: token);
+      await _storage.write(key: 'token', value: token);
       
       if (mounted) {
         context.go('/projects');

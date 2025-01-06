@@ -25,6 +25,7 @@ func LoginHandler(userClient pb.UserClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Printf("Failed to bind request: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
@@ -34,12 +35,14 @@ func LoginHandler(userClient pb.UserClient) gin.HandlerFunc {
 			Password: req.Password,
 		})
 		if err != nil {
+			log.Printf("Failed to login: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
 			return
 		}
 
 		token, err := auth.NewToken(res.UserId, req.Email).Encode()
 		if err != nil {
+			log.Printf("Failed to create token: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
 			return
 		}
@@ -64,6 +67,7 @@ func ConfirmHandler(mailer pb.MailerClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req ConfirmRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Printf("Failed to bind request: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
@@ -72,6 +76,7 @@ func ConfirmHandler(mailer pb.MailerClient) gin.HandlerFunc {
 			Email: req.Email,
 		})
 		if err != nil {
+			log.Printf("Failed to send confirmation email: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send confirmation email"})
 			return
 		}
@@ -98,6 +103,7 @@ func RegisterHandler(userClient pb.UserClient, mailer pb.MailerClient) gin.Handl
 	return func(c *gin.Context) {
 		var req RegisterRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Printf("Failed to bind request: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
@@ -106,6 +112,7 @@ func RegisterHandler(userClient pb.UserClient, mailer pb.MailerClient) gin.Handl
 			Email: req.Email,
 		})
 		if err != nil {
+			log.Printf("Failed to get confirmation code: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get confirmation code"})
 			return
 		}
@@ -127,6 +134,7 @@ func RegisterHandler(userClient pb.UserClient, mailer pb.MailerClient) gin.Handl
 
 		token, err := auth.NewToken(createRes.UserId, req.Email).Encode()
 		if err != nil {
+			log.Printf("Failed to create token: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
 			return
 		}
@@ -137,7 +145,8 @@ func RegisterHandler(userClient pb.UserClient, mailer pb.MailerClient) gin.Handl
 	}
 }
 
-func ValidHandler() gin.HandlerFunc {
+func ValidHandler(userClient pb.UserClient) gin.HandlerFunc {
+	ctx := context.Background()
 	type ValidResponse struct {
 		UserID string `json:"user_id"`
 		Email  string `json:"email"`
@@ -146,6 +155,20 @@ func ValidHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.MustGet("user_id").(string)
 		email := c.MustGet("user_email").(string)
+
+		res, err := userClient.GetUser(ctx, &pb.GetUserRequest{
+			UserId: userID,
+		})
+		if err != nil {
+			log.Printf("Failed to get user: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+			return
+		}
+
+		if res.Email != email {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
+		}
 
 		c.JSON(http.StatusOK, ValidResponse{
 			UserID: userID,

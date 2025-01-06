@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "easypwn/internal/api"
 	"easypwn/internal/pkg/project"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,13 +18,15 @@ func GetOsListHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 		Name string `json:"name"`
 	}
 
-	var osList []OsResponse
 	return func(c *gin.Context) {
+		var osList []OsResponse
 		res, err := projectClient.GetOsList(context.Background(), &pb.GetOsListRequest{})
 		if err != nil {
+			log.Printf("Failed to get os list: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get os list"})
 			return
 		}
+
 		for _, os := range res.OsList {
 			osList = append(osList, OsResponse{Id: os.Id, Name: os.Name})
 		}
@@ -37,10 +40,11 @@ func GetPluginListHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 		Name string `json:"name"`
 	}
 
-	var pluginList []PluginResponse
 	return func(c *gin.Context) {
+		var pluginList []PluginResponse
 		res, err := projectClient.GetPluginList(context.Background(), &pb.GetPluginListRequest{})
 		if err != nil {
+			log.Printf("Failed to get plugin list: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get plugin list"})
 			return
 		}
@@ -63,24 +67,27 @@ func GetProjectsHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 		CreatedAt  string `json:"created_at"`
 	}
 
-	var projects []ProjectResponse
 	return func(c *gin.Context) {
+		var projects []ProjectResponse
 		res, err := projectClient.GetProjects(context.Background(), &pb.GetProjectsRequest{
 			UserId: c.GetString("user_id"),
 		})
 		if err != nil {
+			log.Printf("Failed to get project list: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get project list"})
 			return
 		}
 		for _, proj := range res.Projects {
 			osName, err := project.GetOsNameFromID(proj.OsId)
 			if err != nil {
+				log.Printf("Failed to get os: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get os"})
 				return
 			}
 
 			pluginName, err := project.GetPluginNameFromID(proj.PluginId)
 			if err != nil {
+				log.Printf("Failed to get plugin: %v", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get plugin"})
 				return
 			}
@@ -111,22 +118,33 @@ func CreateProjectHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 		ProjectId string `json:"project_id"`
 	}
 
+	os.MkdirAll("/var/lib/easypwn/projects", 0755)
+
 	return func(c *gin.Context) {
 		var req CreateProjectRequest
 		if err := c.ShouldBind(&req); err != nil {
+			log.Printf("Failed to bind request: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
 
 		file, err := c.FormFile("file")
 		if err != nil {
+			log.Printf("Failed to get file: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
 			return
 		}
 
 		projectDir, err := os.MkdirTemp("/var/lib/easypwn/projects", "easypwn-*")
 		if err != nil {
+			log.Printf("Failed to create temporary directory: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create temporary directory"})
+			return
+		}
+
+		if err := c.SaveUploadedFile(file, filepath.Join(projectDir, file.Filename)); err != nil {
+			log.Printf("Failed to save file: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 			return
 		}
 
@@ -139,12 +157,8 @@ func CreateProjectHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 			PluginId: req.PluginId,
 		})
 		if err != nil {
+			log.Printf("Failed to create project: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create project"})
-			return
-		}
-
-		if err := c.SaveUploadedFile(file, filepath.Join(projectDir, file.Filename)); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 			return
 		}
 
@@ -161,6 +175,7 @@ func DeleteProjectHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 			ProjectId: projectId,
 		})
 		if err != nil {
+			log.Printf("Failed to delete project: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete project"})
 			return
 		}

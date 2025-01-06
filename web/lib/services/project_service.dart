@@ -78,7 +78,8 @@ class ProjectService {
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data.map((os) => Os.fromJson(os)).toList();
+      if (data == null) return [];
+      return (data as List).map((os) => Os.fromJson(os)).toList();
     } else {
       throw Exception('Failed to get OS list');
     }
@@ -93,7 +94,8 @@ class ProjectService {
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data.map((plugin) => Plugin.fromJson(plugin)).toList();
+      if (data == null) return [];
+      return (data as List).map((plugin) => Plugin.fromJson(plugin)).toList();
     } else {
       throw Exception('Failed to get plugin list');
     }
@@ -108,13 +110,14 @@ class ProjectService {
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data.map((project) => Project.fromJson(project)).toList();
+      if (data == null) return [];
+      return (data as List).map((project) => Project.fromJson(project)).toList();
     } else {
       throw Exception('Failed to get projects');
     }
   }
 
-  Future<String> createProject(String projectName, String osId, String pluginId, String filename, String filepath) async {
+  Future<String> createProject(String projectName, String osId, String pluginId, List<int> fileBytes, String filename) async {
     var request = http.MultipartRequest('POST', Uri.parse('/api/project'));
     
     request.headers['Authorization'] = 'Bearer $token';
@@ -124,9 +127,9 @@ class ProjectService {
     request.fields['plugin_id'] = pluginId;
     
     request.files.add(
-      await http.MultipartFile.fromPath(
+      http.MultipartFile.fromBytes(
         'file',
-        filepath,
+        fileBytes,
         filename: filename
       )
     );

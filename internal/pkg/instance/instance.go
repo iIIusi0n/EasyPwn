@@ -77,14 +77,23 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 }
 
 func GetInstance(ctx context.Context, db *sql.DB, id string) (*Instance, error) {
+	var createdAt, updatedAt string
 	instance := &Instance{}
-	err := db.QueryRow("SELECT * FROM instance WHERE id = UUID_TO_BIN(?)", id).Scan(
+	err := db.QueryRow("SELECT BIN_TO_UUID(id), BIN_TO_UUID(project_id), container_id, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM instance WHERE id = UUID_TO_BIN(?)", id).Scan(
 		&instance.ID,
 		&instance.ProjectID,
 		&instance.ContainerID,
-		&instance.CreatedAt,
-		&instance.UpdatedAt,
+		&createdAt,
+		&updatedAt,
 	)
+	if err != nil {
+		return nil, err
+	}
+	instance.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	instance.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 	if err != nil {
 		return nil, err
 	}

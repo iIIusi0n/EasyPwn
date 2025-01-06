@@ -62,7 +62,7 @@ class _RegisterPageState extends State<RegisterPage> {
         _confirmationCodeController.text,
       );
 
-      _storage.write(key: 'token', value: token);
+      await _storage.write(key: 'token', value: token);
 
       if (mounted) {
         context.go('/projects');

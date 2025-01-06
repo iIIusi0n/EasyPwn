@@ -98,6 +98,7 @@ func (s *ProjectService) GetOsList(ctx context.Context, req *pb.GetOsListRequest
 	for _, os := range oss {
 		response.OsList = append(response.OsList, &pb.GetOsResponse{Id: os.ID, Name: os.Name})
 	}
+
 	return response, nil
 }
 
