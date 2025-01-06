@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -ldflags="-s -w" -o main ./cmd/instance-service
+RUN go build -o main ./cmd/instance-service
 
 # runtime
 FROM alpine:3.21

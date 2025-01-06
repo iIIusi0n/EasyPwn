@@ -15,10 +15,11 @@ jobs:
     strategy:
       matrix:
         image:
+          - api-gateway
           - chatbot
-          - mailer
           - instance-service
           - instance-streaming-service
+          - mailer
           - project-service
           - user-service
           - web

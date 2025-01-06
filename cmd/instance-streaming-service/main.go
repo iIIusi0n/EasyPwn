@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 
 	pb "easypwn/internal/api"
 	"easypwn/internal/api/stream"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -37,7 +37,7 @@ func init() {
 }
 
 func main() {
-	instanceClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", instanceListenHost, instanceListenPort))
+	instanceClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", instanceListenHost, instanceListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to instance: %v", err)
 	}
@@ -45,7 +45,7 @@ func main() {
 
 	instanceClient := pb.NewInstanceClient(instanceClientConn)
 
-	projectClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", projectListenHost, projectListenPort))
+	projectClientConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", projectListenHost, projectListenPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to project: %v", err)
 	}
@@ -53,17 +53,11 @@ func main() {
 
 	projectClient := pb.NewProjectClient(projectClientConn)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", listenPort))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
 	r := stream.NewRouter(stream.RouterClients{
 		ProjectClient:  projectClient,
 		InstanceClient: instanceClient,
 	})
 
-	log.Printf("server listening at %v", lis.Addr())
 	if err := r.Run(fmt.Sprintf(":%s", listenPort)); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

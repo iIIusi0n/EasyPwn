@@ -52,9 +52,13 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 	}
 	defer tx.Rollback()
 
+	_, err = tx.Exec("INSERT INTO instance (id, project_id, container_id) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), ?)", projectID, containerID)
+	if err != nil {
+		return nil, err
+	}
+
 	var instanceID string
-	result := tx.QueryRow("INSERT INTO instance (project_id, container_id) VALUES (?, ?) RETURNING id", projectID, containerID)
-	err = result.Scan(&instanceID)
+	err = tx.QueryRow("SELECT BIN_TO_UUID(id) FROM instance WHERE container_id = ?", containerID).Scan(&instanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +77,23 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 }
 
 func GetInstance(ctx context.Context, db *sql.DB, id string) (*Instance, error) {
+	var createdAt, updatedAt string
 	instance := &Instance{}
-	err := db.QueryRow("SELECT * FROM instance WHERE id = $1", id).Scan(
+	err := db.QueryRow("SELECT BIN_TO_UUID(id), BIN_TO_UUID(project_id), container_id, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM instance WHERE id = UUID_TO_BIN(?)", id).Scan(
 		&instance.ID,
 		&instance.ProjectID,
 		&instance.ContainerID,
-		&instance.CreatedAt,
-		&instance.UpdatedAt,
+		&createdAt,
+		&updatedAt,
 	)
+	if err != nil {
+		return nil, err
+	}
+	instance.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	instance.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +116,7 @@ func (i *Instance) Delete(ctx context.Context, db *sql.DB) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("DELETE FROM instance WHERE id = $1", i.ID)
+	_, err = tx.Exec("DELETE FROM instance WHERE id = UUID_TO_BIN(?)", i.ID)
 	if err != nil {
 		return err
 	}
@@ -113,11 +126,16 @@ func (i *Instance) Delete(ctx context.Context, db *sql.DB) error {
 
 func (i *Instance) GetLogs(ctx context.Context, db *sql.DB, limit int) (string, error) {
 	var logs string
-	err := db.QueryRow("SELECT log FROM instance_log WHERE instance_id = $1 ORDER BY created_at DESC LIMIT $2", i.ID, limit).Scan(&logs)
+	err := db.QueryRow("SELECT log FROM instance_log WHERE instance_id = UUID_TO_BIN(?) ORDER BY created_at DESC LIMIT ?", i.ID, limit).Scan(&logs)
 	if err != nil {
 		return "", err
 	}
 	return logs, nil
+}
+
+func (i *Instance) WriteLog(ctx context.Context, db *sql.DB, log string) error {
+	_, err := db.Exec("INSERT INTO instance_log (id, instance_id, log) VALUES (UUID_TO_BIN(UUID()), UUID_TO_BIN(?), ?)", i.ID, log)
+	return err
 }
 
 func (i *Instance) Execute(ctx context.Context, command ...string) (ExecInOut, error) {

@@ -80,3 +80,44 @@ func TestGenerateConfirmationCode(t *testing.T) {
 		t.Errorf("generateConfirmationCode() returned code of length %d, want 6", len(code1))
 	}
 }
+
+func TestGetConfirmationCode(t *testing.T) {
+	ctx := context.Background()
+	config := getMailerConfig()
+	mailerService := NewMailerService(ctx, config)
+
+	code, err := mailerService.SendConfirmationEmail(ctx, &pb.SendConfirmationEmailRequest{
+		Email: "test2@example.com",
+	})
+	if err != nil {
+		t.Errorf("SendConfirmationEmail() error = %v", err)
+		return
+	}
+
+	t.Run("SuccessfulGet", func(t *testing.T) {
+		res, err := mailerService.GetConfirmationCode(ctx, &pb.GetConfirmationCodeRequest{
+			Email: "test2@example.com",
+		})
+		if err != nil {
+			t.Errorf("GetConfirmationCode() error = %v", err)
+			return
+		}
+
+		if res.Code == "" {
+			t.Error("GetConfirmationCode() returned empty confirmation code")
+		}
+
+		if res.Code != code.Code {
+			t.Error("GetConfirmationCode() returned incorrect confirmation code")
+		}
+	})
+
+	t.Run("UnsendedEmail", func(t *testing.T) {
+		_, err := mailerService.GetConfirmationCode(ctx, &pb.GetConfirmationCodeRequest{
+			Email: "unsended@example.com",
+		})
+		if err == nil {
+			t.Error("Expected error for unsended email, got nil")
+		}
+	})
+}

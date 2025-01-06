@@ -59,7 +59,7 @@ func (s *MailerService) storeConfirmationCode(ctx context.Context, email, code s
 	db := data.GetDB()
 
 	_, err := db.ExecContext(ctx,
-		"INSERT INTO email_confirmation (email, code) VALUES (?, ?)",
+		"INSERT INTO email_confirmation (id, email, code) VALUES (UUID_TO_BIN(UUID()), ?, ?)",
 		email, code)
 
 	return err
@@ -130,7 +130,7 @@ func (s *MailerService) hasRecentConfirmation(ctx context.Context, email string)
 		SELECT COUNT(*) 
 		FROM email_confirmation 
 		WHERE email = ? 
-		AND created_at > DATETIME('now', '-3 minutes')`,
+		AND created_at > DATE_SUB(NOW(), INTERVAL 3 MINUTE)`,
 		email).Scan(&count)
 
 	if err != nil {
@@ -148,7 +148,7 @@ func (s *MailerService) GetConfirmationCode(ctx context.Context, req *pb.GetConf
 		SELECT code 
 		FROM email_confirmation 
 		WHERE email = ?
-		AND created_at > DATETIME('now', '-3 minutes')`,
+		AND created_at > DATE_SUB(NOW(), INTERVAL 3 MINUTE)`,
 		req.Email).Scan(&code)
 
 	if err != nil {

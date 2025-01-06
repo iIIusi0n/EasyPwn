@@ -21,7 +21,10 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Project_CreateProject_FullMethodName = "/easypwn.Project/CreateProject"
 	Project_GetProject_FullMethodName    = "/easypwn.Project/GetProject"
+	Project_GetProjects_FullMethodName   = "/easypwn.Project/GetProjects"
 	Project_DeleteProject_FullMethodName = "/easypwn.Project/DeleteProject"
+	Project_GetOsList_FullMethodName     = "/easypwn.Project/GetOsList"
+	Project_GetPluginList_FullMethodName = "/easypwn.Project/GetPluginList"
 )
 
 // ProjectClient is the client API for Project service.
@@ -30,7 +33,10 @@ const (
 type ProjectClient interface {
 	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error)
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*GetProjectResponse, error)
+	GetProjects(ctx context.Context, in *GetProjectsRequest, opts ...grpc.CallOption) (*GetProjectsResponse, error)
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...grpc.CallOption) (*DeleteProjectResponse, error)
+	GetOsList(ctx context.Context, in *GetOsListRequest, opts ...grpc.CallOption) (*GetOsListResponse, error)
+	GetPluginList(ctx context.Context, in *GetPluginListRequest, opts ...grpc.CallOption) (*GetPluginListResponse, error)
 }
 
 type projectClient struct {
@@ -61,10 +67,40 @@ func (c *projectClient) GetProject(ctx context.Context, in *GetProjectRequest, o
 	return out, nil
 }
 
+func (c *projectClient) GetProjects(ctx context.Context, in *GetProjectsRequest, opts ...grpc.CallOption) (*GetProjectsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProjectsResponse)
+	err := c.cc.Invoke(ctx, Project_GetProjects_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *projectClient) DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...grpc.CallOption) (*DeleteProjectResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteProjectResponse)
 	err := c.cc.Invoke(ctx, Project_DeleteProject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *projectClient) GetOsList(ctx context.Context, in *GetOsListRequest, opts ...grpc.CallOption) (*GetOsListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOsListResponse)
+	err := c.cc.Invoke(ctx, Project_GetOsList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *projectClient) GetPluginList(ctx context.Context, in *GetPluginListRequest, opts ...grpc.CallOption) (*GetPluginListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPluginListResponse)
+	err := c.cc.Invoke(ctx, Project_GetPluginList_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +113,10 @@ func (c *projectClient) DeleteProject(ctx context.Context, in *DeleteProjectRequ
 type ProjectServer interface {
 	CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error)
 	GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error)
+	GetProjects(context.Context, *GetProjectsRequest) (*GetProjectsResponse, error)
 	DeleteProject(context.Context, *DeleteProjectRequest) (*DeleteProjectResponse, error)
+	GetOsList(context.Context, *GetOsListRequest) (*GetOsListResponse, error)
+	GetPluginList(context.Context, *GetPluginListRequest) (*GetPluginListResponse, error)
 	mustEmbedUnimplementedProjectServer()
 }
 
@@ -94,8 +133,17 @@ func (UnimplementedProjectServer) CreateProject(context.Context, *CreateProjectR
 func (UnimplementedProjectServer) GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProject not implemented")
 }
+func (UnimplementedProjectServer) GetProjects(context.Context, *GetProjectsRequest) (*GetProjectsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProjects not implemented")
+}
 func (UnimplementedProjectServer) DeleteProject(context.Context, *DeleteProjectRequest) (*DeleteProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProject not implemented")
+}
+func (UnimplementedProjectServer) GetOsList(context.Context, *GetOsListRequest) (*GetOsListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOsList not implemented")
+}
+func (UnimplementedProjectServer) GetPluginList(context.Context, *GetPluginListRequest) (*GetPluginListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPluginList not implemented")
 }
 func (UnimplementedProjectServer) mustEmbedUnimplementedProjectServer() {}
 func (UnimplementedProjectServer) testEmbeddedByValue()                 {}
@@ -154,6 +202,24 @@ func _Project_GetProject_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Project_GetProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServer).GetProjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Project_GetProjects_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServer).GetProjects(ctx, req.(*GetProjectsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Project_DeleteProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteProjectRequest)
 	if err := dec(in); err != nil {
@@ -168,6 +234,42 @@ func _Project_DeleteProject_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProjectServer).DeleteProject(ctx, req.(*DeleteProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Project_GetOsList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOsListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServer).GetOsList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Project_GetOsList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServer).GetOsList(ctx, req.(*GetOsListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Project_GetPluginList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPluginListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServer).GetPluginList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Project_GetPluginList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServer).GetPluginList(ctx, req.(*GetPluginListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,8 +290,20 @@ var Project_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Project_GetProject_Handler,
 		},
 		{
+			MethodName: "GetProjects",
+			Handler:    _Project_GetProjects_Handler,
+		},
+		{
 			MethodName: "DeleteProject",
 			Handler:    _Project_DeleteProject_Handler,
+		},
+		{
+			MethodName: "GetOsList",
+			Handler:    _Project_GetOsList_Handler,
+		},
+		{
+			MethodName: "GetPluginList",
+			Handler:    _Project_GetPluginList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

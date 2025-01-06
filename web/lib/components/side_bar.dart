@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import 'sidebar_item.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SideBar extends StatelessWidget {
   final int selectedIndex;
@@ -35,7 +36,13 @@ class SideBar extends StatelessWidget {
           SidebarItem(
             icon: Icons.logout,
             label: 'Logout',
-            onTap: () {},
+            onTap: () async {
+              const storage = FlutterSecureStorage();
+              await storage.delete(key: 'token');
+              if (context.mounted) {
+                context.go('/');
+              }
+            },
           ),
         ],
       ),

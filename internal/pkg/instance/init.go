@@ -50,7 +50,6 @@ func initImages() {
 	if err != nil {
 		log.Fatal("Failed to get image names: ", err)
 	}
-	log.Printf("Image names: %+v", imageNames)
 
 	for _, file := range files {
 		found := false

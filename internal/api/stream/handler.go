@@ -22,9 +22,9 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func handleWebSocketSession(c *gin.Context, ins *instance.Instance, command ...string) {
+func handleWebSocketSession(c *gin.Context, ins *instance.Instance, logging bool, command ...string) {
 	ctx := context.Background()
-
+	db := data.GetDB()
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade to WebSocket"})
@@ -53,6 +53,10 @@ func handleWebSocketSession(c *gin.Context, ins *instance.Instance, command ...s
 					log.Println("Failed to read from gdb:", err)
 				}
 				return
+			}
+
+			if logging {
+				ins.WriteLog(ctx, db, string(buf[:n]))
 			}
 
 			if n > 0 {
@@ -113,7 +117,7 @@ func GetDebuggerSessionHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get instance"})
 			return
 		}
-		handleWebSocketSession(c, ins, "gdb", c.MustGet("full_path").(string))
+		handleWebSocketSession(c, ins, true, "gdb", c.MustGet("full_path").(string))
 	}
 }
 
@@ -127,6 +131,6 @@ func GetShellSessionHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get instance"})
 			return
 		}
-		handleWebSocketSession(c, ins, "/bin/bash")
+		handleWebSocketSession(c, ins, false, "/bin/bash")
 	}
 }

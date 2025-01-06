@@ -6,6 +6,7 @@ import 'pages/home_page.dart';
 import 'pages/instance.dart';
 import 'pages/project.dart';
 import 'components/dashboard_layout.dart';
+import 'router_helpers.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -13,12 +14,14 @@ final router = GoRouter(
     // Auth routes (no shell)
     GoRoute(
       path: '/login',
+      redirect: redirectIfAuthenticated,
       pageBuilder: (context, state) => const NoTransitionPage(
         child: LoginPage(),
       ),
     ),
     GoRoute(
       path: '/register',
+      redirect: redirectIfAuthenticated,
       pageBuilder: (context, state) => const NoTransitionPage(
         child: RegisterPage(),
       ),

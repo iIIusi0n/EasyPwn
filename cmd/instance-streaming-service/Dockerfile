@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -ldflags="-s -w" -o main ./cmd/instance-streaming-service
+RUN go build -o main ./cmd/instance-streaming-service
 
 # runtime
 FROM alpine:3.21

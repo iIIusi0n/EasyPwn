@@ -7,7 +7,11 @@ option go_package = "easypwn/internal/api";
 service Project {
     rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {}
     rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {}
+    rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse) {}
     rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse) {}
+
+    rpc GetOsList(GetOsListRequest) returns (GetOsListResponse) {}
+    rpc GetPluginList(GetPluginListRequest) returns (GetPluginListResponse) {}
 }
 
 message CreateProjectRequest {
@@ -15,8 +19,8 @@ message CreateProjectRequest {
     string user_id = 2;
     string file_path = 3;
     string file_name = 4;
-    string os = 5;
-    string plugin = 6;
+    string os_id = 5;
+    string plugin_id = 6;
 }
 
 message CreateProjectResponse {
@@ -33,8 +37,17 @@ message GetProjectResponse {
     string user_id = 3;
     string file_path = 4;
     string file_name = 5;
-    string os = 6;
-    string plugin = 7;
+    string os_id = 6;
+    string plugin_id = 7;
+    string created_at = 8;
+}
+
+message GetProjectsRequest {
+    string user_id = 1;
+}
+
+message GetProjectsResponse {
+    repeated GetProjectResponse projects = 1;
 }
 
 message DeleteProjectRequest {
@@ -43,4 +56,26 @@ message DeleteProjectRequest {
 
 message DeleteProjectResponse {
     string project_id = 1;
+}
+
+message GetOsListRequest {}
+
+message GetOsResponse {
+    string id = 1;
+    string name = 2;
+}
+
+message GetOsListResponse {
+    repeated GetOsResponse os_list = 1;
+}
+
+message GetPluginListRequest {}
+
+message GetPluginResponse {
+    string id = 1;
+    string name = 2;
+}
+
+message GetPluginListResponse {
+    repeated GetPluginResponse plugin_list = 1;
 }

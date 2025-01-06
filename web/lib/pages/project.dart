@@ -5,6 +5,9 @@ import '../components/elements/custom_button.dart';
 import '../components/elements/custom_select.dart';
 import '../components/elements/custom_file_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../services/project_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 
 class ProjectPage extends StatefulWidget {
   const ProjectPage({super.key});
@@ -15,21 +18,59 @@ class ProjectPage extends StatefulWidget {
 
 class _ProjectPageState extends State<ProjectPage> {
   final _nameController = TextEditingController();
-  String? selectedOs = 'ubuntu-2410';
-  String? selectedPlugin = 'gef';
+  String? selectedOs;
+  String? selectedPlugin;
   String? selectedFileName;
   PlatformFile? selectedFile;
 
-  List<Map<String, dynamic>> projects = [
-    {
-      'id': 'proj-1',
-      'name': 'Project 1',
-      'os': 'Ubuntu 24.10',
-      'plugin': 'GEF',
-      'createdAt': DateTime.now().subtract(const Duration(days: 2)),
-    },
-    // Add more mock data as needed
-  ];
+  final _storage = const FlutterSecureStorage();
+  late ProjectService _projectService;
+  List<Project> projects = [];
+  List<Os> osList = [];
+  List<Plugin> pluginList = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    final token = await _storage.read(key: 'token');
+    if (token == null) {
+      if (mounted) context.go('/login');
+      return;
+    }
+
+    _projectService = ProjectService(token: token);
+    
+    try {
+      final futures = await Future.wait([
+        _projectService.getProjects(),
+        _projectService.getOsList(),
+        _projectService.getPluginList(),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          projects = futures[0] as List<Project>;
+          osList = futures[1] as List<Os>;
+          pluginList = futures[2] as List<Plugin>;
+          _isLoading = false;
+        });
+
+        if (osList.isNotEmpty) {
+          selectedOs = osList.first.id;
+        }
+        if (pluginList.isNotEmpty) {
+          selectedPlugin = pluginList.first.id;
+        }
+      }
+    } catch (e) {
+      if (mounted) context.go('/login');
+    }
+  }
 
   @override
   void dispose() {
@@ -37,8 +78,90 @@ class _ProjectPageState extends State<ProjectPage> {
     super.dispose();
   }
 
+  Future<void> _handleCreateProject() async {
+    if (_nameController.text.isEmpty ||
+        selectedOs == null ||
+        selectedPlugin == null ||
+        selectedFile == null ||
+        selectedFile!.bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+    
+    try {
+      final _ = await _projectService.createProject(
+        _nameController.text,
+        selectedOs!,
+        selectedPlugin!,
+        selectedFile!.bytes!,
+        selectedFile!.name,
+      );
+      
+      final updatedProjects = await _projectService.getProjects();
+      setState(() {
+        projects = updatedProjects;
+      });
+
+      _nameController.clear();
+      setState(() {
+        selectedFileName = null;
+        selectedFile = null;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to create project')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDeleteProject(String projectId) async {
+    try {
+      await _projectService.deleteProject(projectId);
+      final updatedProjects = await _projectService.getProjects();
+      setState(() {
+        projects = updatedProjects;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete project')),
+        );
+      }
+    }
+  }
+
+  String getOsLabel(String label) {
+    switch (label) {
+      case 'ubuntu-2410':
+        return 'Ubuntu 24.10';
+      default:
+        return label;
+    }
+  }
+
+  String getPluginLabel(String label) {
+    switch (label) {
+      case 'gef':
+        return 'GEF';
+      case 'pwndbg':
+        return 'pwndbg';
+      default:
+        return label;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Padding(
@@ -69,9 +192,10 @@ class _ProjectPageState extends State<ProjectPage> {
                   CustomSelect(
                     value: selectedOs ?? '',
                     label: 'Operating System',
-                    items: const [
-                      {'value': 'ubuntu-2410', 'label': 'Ubuntu 24.10'},
-                    ],
+                    items: osList.map((os) => {
+                      'value': os.id,
+                      'label': getOsLabel(os.name),
+                    }).toList(),
                     onChanged: (value) {
                       setState(() {
                         selectedOs = value;
@@ -82,10 +206,10 @@ class _ProjectPageState extends State<ProjectPage> {
                   CustomSelect(
                     value: selectedPlugin ?? '',
                     label: 'Debug Plugin',
-                    items: const [
-                      {'value': 'gef', 'label': 'GEF'},
-                      {'value': 'pwndbg', 'label': 'pwndbg'},
-                    ],
+                    items: pluginList.map((plugin) => {
+                      'value': plugin.id,
+                      'label': getPluginLabel(plugin.name),
+                    }).toList(),
                     onChanged: (value) {
                       setState(() {
                         selectedPlugin = value;
@@ -105,9 +229,7 @@ class _ProjectPageState extends State<ProjectPage> {
                   const SizedBox(height: 24),
                   CustomButton(
                     text: 'Create Project',
-                    onPressed: () {
-                      // TODO: Implement project creation
-                    },
+                    onPressed: _handleCreateProject,
                     width: double.infinity,
                   ),
                 ],
@@ -166,11 +288,11 @@ class _ProjectPageState extends State<ProjectPage> {
                         rows: projects.map((project) {
                           return DataRow(
                             cells: [
-                              DataCell(Text(project['name'])),
-                              DataCell(Text(project['os'])),
-                              DataCell(Text(project['plugin'])),
+                              DataCell(Text(project.name)),
+                              DataCell(Text(project.osName)),
+                              DataCell(Text(project.pluginName)),
                               DataCell(Text(_formatDateTime(
-                                  project['createdAt'] as DateTime))),
+                                  DateTime.parse(project.createdAt)))),
                               DataCell(_buildActionButtons(project)),
                             ],
                           );
@@ -200,7 +322,7 @@ class _ProjectPageState extends State<ProjectPage> {
     }
   }
 
-  Widget _buildActionButtons(Map<String, dynamic> project) {
+  Widget _buildActionButtons(Project project) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -216,7 +338,7 @@ class _ProjectPageState extends State<ProjectPage> {
           onPressed: () {
             // TODO: Create new session
           },
-          child: const Text('New Session'),
+          child: const Text('New Instance'),
         ),
         const SizedBox(width: 8),
         OutlinedButton(
@@ -241,7 +363,7 @@ class _ProjectPageState extends State<ProjectPage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: Delete project
+                      _handleDeleteProject(project.id);
                       Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(foregroundColor: Colors.red),

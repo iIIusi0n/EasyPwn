@@ -30,3 +30,7 @@ testpackage:
 		exit 1; \
 	fi
 	godotenv -f .env.local go test -v ./$(package)
+
+# run server
+run:
+	docker compose --env-file .env.local up --build
