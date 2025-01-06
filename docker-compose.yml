@@ -51,7 +51,7 @@ services:
       - MAILER_SMTP_PASS=${MAILER_SMTP_PASS}
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      db:
+      mysqldb:
         condition: service_healthy
 
   user-service:
@@ -63,7 +63,7 @@ services:
       - USER_LISTEN_PORT=${USER_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      db:
+      mysqldb:
         condition: service_healthy
 
   project-service:
@@ -75,7 +75,7 @@ services:
       - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      db:
+      mysqldb:
         condition: service_healthy
 
   instance-service:
@@ -90,7 +90,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      db:
+      mysqldb:
         condition: service_healthy
 
   instance-streaming-service:
