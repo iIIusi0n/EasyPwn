@@ -26,8 +26,17 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, fileNam
 	defer tx.Rollback()
 
 	var projectID string
-	result := tx.QueryRow("INSERT INTO project (id, name, user_id, file_path, file_name, os_id, plugin_id) VALUES (UUID_TO_BIN(UUID()), ?, ?, ?, ?, ?, ?) RETURNING BIN_TO_UUID(id)", name, userID, filePath, fileName, osID, pluginID)
-	err = result.Scan(&projectID)
+	err = tx.QueryRow("SELECT UUID() INTO @uuid").Scan(&projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = tx.Exec("INSERT INTO project (id, name, user_id, file_path, file_name, os_id, plugin_id) VALUES (UUID_TO_BIN(@uuid), ?, ?, ?, ?, ?, ?)", name, userID, filePath, fileName, osID, pluginID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.QueryRow("SELECT @uuid").Scan(&projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +60,7 @@ func NewProject(ctx context.Context, db *sql.DB, name, userID, filePath, fileNam
 
 func GetProject(ctx context.Context, db *sql.DB, id string) (*Project, error) {
 	project := &Project{}
-	err := db.QueryRow("SELECT * FROM project WHERE id = UUID_TO_BIN($1)", id).Scan(
+	err := db.QueryRow("SELECT * FROM project WHERE id = UUID_TO_BIN(?)", id).Scan(
 		&project.ID,
 		&project.Name,
 		&project.UserID,
@@ -75,7 +84,7 @@ func (p *Project) Delete(ctx context.Context, db *sql.DB) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("DELETE FROM project WHERE id = UUID_TO_BIN($1)", p.ID)
+	_, err = tx.Exec("DELETE FROM project WHERE id = UUID_TO_BIN(?)", p.ID)
 	if err != nil {
 		return err
 	}

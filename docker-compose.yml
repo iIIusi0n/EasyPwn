@@ -35,6 +35,9 @@ services:
       - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
       - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - instance-service
 
@@ -50,6 +53,9 @@ services:
       - MAILER_SMTP_USER=${MAILER_SMTP_USER}
       - MAILER_SMTP_PASS=${MAILER_SMTP_PASS}
       - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       mysqldb:
         condition: service_healthy
@@ -62,6 +68,9 @@ services:
     environment:
       - USER_LISTEN_PORT=${USER_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       mysqldb:
         condition: service_healthy
@@ -74,6 +83,9 @@ services:
     environment:
       - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       mysqldb:
         condition: service_healthy

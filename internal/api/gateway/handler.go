@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "easypwn/internal/api"
 	"easypwn/internal/pkg/auth"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -119,6 +120,7 @@ func RegisterHandler(userClient pb.UserClient, mailer pb.MailerClient) gin.Handl
 			Password: req.Password,
 		})
 		if err != nil {
+			log.Printf("Failed to create user: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 			return
 		}
@@ -131,6 +133,23 @@ func RegisterHandler(userClient pb.UserClient, mailer pb.MailerClient) gin.Handl
 
 		c.JSON(http.StatusOK, RegisterResponse{
 			Token: token,
+		})
+	}
+}
+
+func ValidHandler() gin.HandlerFunc {
+	type ValidResponse struct {
+		UserID string `json:"user_id"`
+		Email  string `json:"email"`
+	}
+
+	return func(c *gin.Context) {
+		userID := c.MustGet("user_id").(string)
+		email := c.MustGet("user_email").(string)
+
+		c.JSON(http.StatusOK, ValidResponse{
+			UserID: userID,
+			Email:  email,
 		})
 	}
 }

@@ -28,6 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
+  String? _successMessage;
 
   @override
   void dispose() {
@@ -40,9 +41,18 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   VoidCallback get _handleRegister => () async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _errorMessage = 'Passwords do not match';
+        _successMessage = null;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _successMessage = null;
     });
 
     try {
@@ -60,12 +70,48 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to register. Please try again.';
+        _successMessage = null;
       });
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
+  };
+
+  VoidCallback get _handleConfirmation => () async {
+    if (_emailController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter your email';
+      });
+      return;
+    }
+
+    if (!_canSendEmail) {
+      setState(() {
+        _errorMessage = 'Please wait for the email to be sent';
+      });
+      return;
+    }
+
+    setState(() {
+      _errorMessage = null;
+      _successMessage = 'Sending confirmation email...';
+    });
+
+    try {
+      await _authService.sendConfirmationEmail(_emailController.text);
+      setState(() {
+        _successMessage = 'Confirmation email sent successfully';
+        _errorMessage = null;
+      });
+      _startEmailTimer();
+    } catch (e) {
+      setState(() {
+        _successMessage = null;
+        _errorMessage = 'Failed to send confirmation email';
+      });
+    } 
   };
 
   void _startEmailTimer() {
@@ -119,6 +165,17 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               const SizedBox(height: 32),
+              if (_successMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _successMessage!,
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -151,18 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       text: _canSendEmail 
                           ? 'Send' 
                           : '${(_remainingSeconds / 60).floor()}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
-                      onPressed: () async {
-                        if (_canSendEmail && _emailController.text.isNotEmpty) {
-                          try {
-                            await _authService.sendConfirmationEmail(_emailController.text);
-                            _startEmailTimer();
-                          } catch (e) {
-                            setState(() {
-                              _errorMessage = 'Failed to send confirmation email';
-                            });
-                          }
-                        }
-                      },
+                      onPressed: _handleConfirmation,
                     ),
                   ),
                 ],

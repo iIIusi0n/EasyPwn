@@ -52,4 +52,18 @@ class AuthService {
       throw Exception('Failed to send confirmation email');
     }
   }
+
+  Future<void> validateToken(String token) async {
+    final response = await http.get(
+      Uri.parse('/api/user/valid'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Invalid token');
+    }
+  }
 }

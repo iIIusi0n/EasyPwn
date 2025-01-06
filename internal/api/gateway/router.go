@@ -28,6 +28,8 @@ func NewRouter(clients RouterClients) *gin.Engine {
 	user := r.Group("/user")
 	{
 		user.Use(jwtauth.AuthMiddleware())
+
+		user.GET("/valid", ValidHandler())
 	}
 
 	project := r.Group("/project")
