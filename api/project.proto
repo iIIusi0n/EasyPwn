@@ -39,6 +39,7 @@ message GetProjectResponse {
     string file_name = 5;
     string os_id = 6;
     string plugin_id = 7;
+    string created_at = 8;
 }
 
 message GetProjectsRequest {
@@ -65,7 +66,7 @@ message GetOsResponse {
 }
 
 message GetOsListResponse {
-    repeated GetOsResponse oss = 1;
+    repeated GetOsResponse os_list = 1;
 }
 
 message GetPluginListRequest {}
@@ -76,5 +77,5 @@ message GetPluginResponse {
 }
 
 message GetPluginListResponse {
-    repeated GetPluginResponse plugins = 1;
+    repeated GetPluginResponse plugin_list = 1;
 }

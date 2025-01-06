@@ -6,6 +6,7 @@ import (
 	"easypwn/internal/data"
 	"easypwn/internal/pkg/project"
 	"os"
+	"time"
 )
 
 type ProjectService struct {
@@ -63,6 +64,7 @@ func (s *ProjectService) GetProjects(ctx context.Context, req *pb.GetProjectsReq
 			FileName:  project.FileName,
 			OsId:      project.OsID,
 			PluginId:  project.PluginID,
+			CreatedAt: project.CreatedAt.Format(time.RFC3339),
 		})
 	}
 	return response, nil
@@ -94,7 +96,7 @@ func (s *ProjectService) GetOsList(ctx context.Context, req *pb.GetOsListRequest
 
 	response := &pb.GetOsListResponse{}
 	for _, os := range oss {
-		response.Oss = append(response.Oss, &pb.GetOsResponse{Id: os.ID, Name: os.Name})
+		response.OsList = append(response.OsList, &pb.GetOsResponse{Id: os.ID, Name: os.Name})
 	}
 	return response, nil
 }
@@ -107,7 +109,7 @@ func (s *ProjectService) GetPluginList(ctx context.Context, req *pb.GetPluginLis
 
 	response := &pb.GetPluginListResponse{}
 	for _, plugin := range plugins {
-		response.Plugins = append(response.Plugins, &pb.GetPluginResponse{Id: plugin.ID, Name: plugin.Name})
+		response.PluginList = append(response.PluginList, &pb.GetPluginResponse{Id: plugin.ID, Name: plugin.Name})
 	}
 	return response, nil
 }

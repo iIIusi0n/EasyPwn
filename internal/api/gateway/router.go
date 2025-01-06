@@ -39,7 +39,9 @@ func NewRouter(clients RouterClients) *gin.Engine {
 		project.GET("/os", GetOsListHandler(clients.ProjectClient))
 		project.GET("/plugin", GetPluginListHandler(clients.ProjectClient))
 
-		project.DELETE("/:id")
+		project.GET("", GetProjectsHandler(clients.ProjectClient))
+		project.POST("", CreateProjectHandler(clients.ProjectClient))
+		project.DELETE("/:id", DeleteProjectHandler(clients.ProjectClient))
 	}
 
 	return r
