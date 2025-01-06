@@ -87,7 +87,7 @@ func TestGetConfirmationCode(t *testing.T) {
 	mailerService := NewMailerService(ctx, config)
 
 	code, err := mailerService.SendConfirmationEmail(ctx, &pb.SendConfirmationEmailRequest{
-		Email: "test@example.com",
+		Email: "test2@example.com",
 	})
 	if err != nil {
 		t.Errorf("SendConfirmationEmail() error = %v", err)
@@ -96,7 +96,7 @@ func TestGetConfirmationCode(t *testing.T) {
 
 	t.Run("SuccessfulGet", func(t *testing.T) {
 		res, err := mailerService.GetConfirmationCode(ctx, &pb.GetConfirmationCodeRequest{
-			Email: "test@example.com",
+			Email: "test2@example.com",
 		})
 		if err != nil {
 			t.Errorf("GetConfirmationCode() error = %v", err)
