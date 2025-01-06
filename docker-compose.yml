@@ -37,7 +37,6 @@ services:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - instance-service
-      - db
 
   mailer:
     image: easypwn/mailer
@@ -52,7 +51,8 @@ services:
       - MAILER_SMTP_PASS=${MAILER_SMTP_PASS}
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   user-service:
     image: easypwn/user-service
@@ -63,7 +63,8 @@ services:
       - USER_LISTEN_PORT=${USER_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   project-service:
     image: easypwn/project-service
@@ -74,7 +75,8 @@ services:
       - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   instance-service:
     image: easypwn/instance-service
@@ -88,7 +90,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   instance-streaming-service:
     image: easypwn/instance-streaming-service
@@ -110,7 +113,7 @@ services:
       - project-service
       - instance-service
 
-  db:
+  mysqldb:
     image: mysql:9.1
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -118,14 +121,13 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
-      - ./assets/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+      - ./assets/mysql:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 1m
-      timeout: 30s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "--password=${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 30s
 
   caddy:
     image: caddy:2.7.4-alpine

@@ -5,7 +5,6 @@ import (
 	"easypwn/internal/api/gateway"
 	"fmt"
 	"log"
-	"net"
 	"os"
 
 	"google.golang.org/grpc"
@@ -53,17 +52,11 @@ func main() {
 
 	mailerClient := pb.NewMailerClient(mailerClientConn)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", listenPort))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
 	r := gateway.NewRouter(gateway.RouterClients{
 		UserClient: userClient,
 		Mailer:     mailerClient,
 	})
 
-	log.Printf("server listening at %v", lis.Addr())
 	if err := r.Run(fmt.Sprintf(":%s", listenPort)); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

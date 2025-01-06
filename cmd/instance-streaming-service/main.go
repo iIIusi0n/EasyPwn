@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 
 	pb "easypwn/internal/api"
@@ -54,17 +53,11 @@ func main() {
 
 	projectClient := pb.NewProjectClient(projectClientConn)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", listenPort))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
 	r := stream.NewRouter(stream.RouterClients{
 		ProjectClient:  projectClient,
 		InstanceClient: instanceClient,
 	})
 
-	log.Printf("server listening at %v", lis.Addr())
 	if err := r.Run(fmt.Sprintf(":%s", listenPort)); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

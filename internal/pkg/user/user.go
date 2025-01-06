@@ -25,15 +25,15 @@ func NewUser(ctx context.Context, db *sql.DB, email, password string) (*User, er
 	defer tx.Rollback()
 
 	var userId string
-	result := tx.QueryRow("INSERT INTO user (email, password_hash) VALUES (?, ?) RETURNING id", email, passwordHash)
+	result := tx.QueryRow("INSERT INTO user (id, email, password_hash) VALUES (UUID_TO_BIN(UUID()), ?, ?) RETURNING BIN_TO_UUID(id)", email, passwordHash)
 	err = result.Scan(&userId)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = tx.Exec(`
-		INSERT INTO user_license (user_id, license_type_id) 
-		SELECT ?, id FROM user_license_type WHERE name = 'free'
+		INSERT INTO user_license (id, user_id, license_type_id) 
+		SELECT UUID_TO_BIN(UUID()), UUID_TO_BIN(?), id FROM user_license_type WHERE name = 'free'
 	`, userId)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func NewUser(ctx context.Context, db *sql.DB, email, password string) (*User, er
 }
 
 func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {
-	row := db.QueryRow("SELECT id, email, password_hash, created_at, updated_at FROM user WHERE id = ?", id)
+	row := db.QueryRow("SELECT BIN_TO_UUID(id), email, password_hash, created_at, updated_at FROM user WHERE id = UUID_TO_BIN($1)", id)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
@@ -64,7 +64,7 @@ func GetUser(ctx context.Context, db *sql.DB, id string) (*User, error) {
 }
 
 func GetUserByEmail(ctx context.Context, db *sql.DB, email string) (*User, error) {
-	row := db.QueryRow("SELECT id, email, password_hash, created_at, updated_at FROM user WHERE email = ?", email)
+	row := db.QueryRow("SELECT BIN_TO_UUID(id), email, password_hash, created_at, updated_at FROM user WHERE email = $1", email)
 
 	var user User
 	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
@@ -81,7 +81,7 @@ func (u *User) Delete(ctx context.Context, db *sql.DB) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("DELETE FROM user WHERE id = ?", u.ID)
+	_, err = tx.Exec("DELETE FROM user WHERE id = UUID_TO_BIN($1)", u.ID)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (u *User) GetLicense(ctx context.Context, db *sql.DB) (string, error) {
 		SELECT lt.name 
 		FROM user_license ul
 		JOIN user_license_type lt ON lt.id = ul.license_type_id 
-		WHERE ul.user_id = ?`, u.ID).Scan(&licenseType)
+		WHERE ul.user_id = UUID_TO_BIN($1)`, u.ID).Scan(&licenseType)
 	if err != nil {
 		return "", err
 	}
@@ -113,7 +113,7 @@ func (c *User) UpdateLicense(ctx context.Context, db *sql.DB, licenseType string
 	_, err = tx.Exec(`
 		UPDATE user_license 
 		SET license_type_id = (SELECT id FROM user_license_type WHERE name = ?)
-		WHERE user_id = ?
+		WHERE user_id = UUID_TO_BIN($1)
 	`, licenseType, c.ID)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func (c *User) UpdatePassword(ctx context.Context, db *sql.DB, password string) 
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("UPDATE user SET password_hash = ? WHERE id = ?", passwordHash, c.ID)
+	_, err = tx.Exec("UPDATE user SET password_hash = ? WHERE id = UUID_TO_BIN($1)", passwordHash, c.ID)
 	if err != nil {
 		return err
 	}

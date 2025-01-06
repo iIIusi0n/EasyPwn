@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -ldflags="-s -w" -o main ./cmd/mailer
+RUN go build -o main ./cmd/mailer
 
 # runtime
 FROM alpine:3.21
