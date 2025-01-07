@@ -370,6 +370,9 @@ class _ProjectPageState extends State<ProjectPage> {
                     child: const Text('Delete'),
                   ),
                 ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             );
           },
