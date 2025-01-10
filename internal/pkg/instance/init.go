@@ -21,11 +21,6 @@ func init() {
 		host = "unix:///var/run/docker.sock"
 	}
 
-	initDockerDaemon(host)
-	initImages()
-}
-
-func initDockerDaemon(host string) {
 	ctx := context.Background()
 
 	var err error
@@ -40,7 +35,7 @@ func initDockerDaemon(host string) {
 	}
 }
 
-func initImages() {
+func InitImages() {
 	files, err := images.Dockerfiles.ReadDir(".")
 	if err != nil {
 		log.Fatal("Failed to read Dockerfiles: ", err)

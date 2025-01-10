@@ -8,6 +8,7 @@ import (
 	"os"
 
 	pb "easypwn/internal/api"
+	"easypwn/internal/pkg/instance"
 	"easypwn/internal/service"
 
 	"google.golang.org/grpc"
@@ -24,6 +25,8 @@ func init() {
 }
 
 func main() {
+	instance.InitImages()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", listenPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
