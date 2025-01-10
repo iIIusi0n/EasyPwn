@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	pb "easypwn/internal/api"
-	"easypwn/internal/pkg/auth"
+	authjwt "easypwn/internal/pkg/auth"
 )
 
 type RouterClients struct {
@@ -14,7 +14,7 @@ type RouterClients struct {
 
 func NewRouter(clients RouterClients) *gin.Engine {
 	r := gin.Default()
-	r.Use(auth.AuthMiddleware())
+	r.Use(authjwt.AuthMiddleware())
 	r.Use(InstanceAuthMiddleware(clients.ProjectClient, clients.InstanceClient))
 
 	stream := r.Group("/stream")

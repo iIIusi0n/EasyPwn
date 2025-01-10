@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS user_license (
     license_type_id BINARY(16) NOT NULL REFERENCES user_license_type(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 INSERT INTO user_license_type (id, name) VALUES (UUID_TO_BIN(UUID()), 'free');
 INSERT INTO user_license_type (id, name) VALUES (UUID_TO_BIN(UUID()), 'paid');

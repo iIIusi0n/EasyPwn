@@ -44,5 +44,14 @@ func NewRouter(clients RouterClients) *gin.Engine {
 		project.DELETE("/:id", DeleteProjectHandler(clients.ProjectClient))
 	}
 
+	instance := r.Group("/instance")
+	{
+		instance.Use(jwtauth.AuthMiddleware())
+
+		instance.GET("")
+		instance.POST("")
+		instance.DELETE("/:id")
+	}
+
 	return r
 }
