@@ -13,6 +13,12 @@ func InstanceAuthMiddleware(projectClient pb.ProjectClient, instanceClient pb.In
 	return func(c *gin.Context) {
 		ctx := context.Background()
 
+		if c.Param("id") == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Instance ID is required"})
+			c.Abort()
+			return
+		}
+
 		instanceInfo, err := instanceClient.GetInstance(ctx, &pb.GetInstanceRequest{
 			InstanceId: c.Param("id"),
 		})
@@ -37,7 +43,7 @@ func InstanceAuthMiddleware(projectClient pb.ProjectClient, instanceClient pb.In
 			return
 		}
 
-		c.Set("full_path", fmt.Sprintf("%s/%s", projectInfo.FilePath, projectInfo.FileName))
+		c.Set("full_path", fmt.Sprintf("/work/%s", projectInfo.FileName))
 		c.Next()
 	}
 }
