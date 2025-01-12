@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/colors.dart';
+import '../services/instance_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class InstancePage extends StatefulWidget {
   const InstancePage({super.key});
@@ -14,49 +16,60 @@ class _InstancePageState extends State<InstancePage> {
   bool _sortAscending = true;
   int _sortColumnIndex = 0;
 
-  List<Map<String, dynamic>> instances = [
-    {
-      'id': 'inst-1',
-      'projectId': 'proj-1',
-      'createdAt': DateTime.now().subtract(const Duration(hours: 2)),
-      'status': 'Running',
-      'memoryUsage': '124MB',
-      'os': 'ubuntu-2410',
-      'plugin': 'gef',
-    },
-    {
-      'id': 'inst-2',
-      'projectId': 'proj-1',
-      'createdAt': DateTime.now().subtract(const Duration(days: 1)),
-      'status': 'Stopped',
-      'memoryUsage': '256MB',
-      'os': 'debian-12',
-      'plugin': 'radare2',
-    },
-    {
-      'id': 'inst-3',
-      'projectId': 'proj-2',
-      'createdAt': DateTime.now().subtract(const Duration(minutes: 30)),
-      'status': 'Pending',
-      'memoryUsage': '512MB',
-      'os': 'kali-2024',
-      'plugin': 'ghidra',
-    },
-    {
-      'id': 'inst-4',
-      'projectId': 'proj-1',
-      'createdAt': DateTime.now().subtract(const Duration(days: 5)),
-      'status': 'Running',
-      'memoryUsage': '1GB',
-      'os': 'ubuntu-2404',
-      'plugin': 'binary ninja',
-    },
-  ];
+  List<Map<String, dynamic>> instances = [];
+
+  final _storage = const FlutterSecureStorage();
+  late InstanceService _instanceService;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch projects and instances from backend
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    final token = await _storage.read(key: 'token');
+    if (token == null) {
+      if (mounted) context.go('/login');
+      return;
+    }
+
+    _projectService = ProjectService(token: token);
+
+    _instanceService = InstanceService(token: token);
+    
+    try {
+      final futures = await Future.wait([
+        _projectService.getProjects(),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          projects = futures[0] as List<Project>;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) context.go('/login');
+    }
+  }
+
+  Future<void> _refreshInstances() async {
+    if (selectedProjectId == null) return;
+    
+    try {
+      final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
+      setState(() {
+        instances = updatedInstances;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to fetch instances')),
+        );
+      }
+    }
   }
 
   @override
@@ -77,17 +90,15 @@ class _InstancePageState extends State<InstancePage> {
                   labelText: 'Select Project',
                   border: OutlineInputBorder(),
                 ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'proj-1',
-                    child: Text('Project 1'),
-                  ),
-                  // Add more projects
-                ],
+                items: projects.map((project) => DropdownMenuItem(
+                  value: project.id,
+                  child: Text(project.name),
+                )).toList(),
                 onChanged: (value) {
                   setState(() {
                     selectedProjectId = value;
                   });
+                  _refreshInstances();
                 },
               ),
             ),
@@ -234,9 +245,6 @@ class _InstancePageState extends State<InstancePage> {
       case 'stopped':
         statusColor = Colors.red;
         break;
-      case 'pending':
-        statusColor = Colors.orange;
-        break;
       default:
         statusColor = Colors.grey;
     }
@@ -290,8 +298,21 @@ class _InstancePageState extends State<InstancePage> {
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          onPressed: () {
-            // TODO: Start/Restart instance
+          onPressed: () async {
+            try {
+              await _instanceService.startInstance(instance['id']);
+              // Refresh instances after starting
+              final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
+              setState(() {
+                instances = updatedInstances;
+              });
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to start instance')),
+                );
+              }
+            }
           },
           child: Text(isRunning ? 'Restart' : 'Start'),
         ),
@@ -306,8 +327,21 @@ class _InstancePageState extends State<InstancePage> {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            onPressed: () {
-              // TODO: Stop instance
+            onPressed: () async {
+              try {
+                await _instanceService.stopInstance(instance['id']);
+                // Refresh instances after stopping
+                final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
+                setState(() {
+                  instances = updatedInstances;
+                });
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to stop instance')),
+                  );
+                }
+              }
             },
             child: const Text('Stop'),
           ),
@@ -334,9 +368,22 @@ class _InstancePageState extends State<InstancePage> {
                     child: const Text('Cancel'),
                   ),
                   TextButton(
-                    onPressed: () {
-                      // TODO: Delete instance
+                    onPressed: () async {
                       Navigator.pop(context);
+                      try {
+                        await _instanceService.deleteInstance(instance['id']);
+                        // Refresh instances after deletion
+                        final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
+                        setState(() {
+                          instances = updatedInstances;
+                        });
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to delete instance')),
+                          );
+                        }
+                      }
                     },
                     style: TextButton.styleFrom(foregroundColor: Colors.red),
                     child: const Text('Delete'),

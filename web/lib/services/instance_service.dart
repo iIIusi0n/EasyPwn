@@ -59,4 +59,32 @@ class InstanceService {
       throw Exception('Failed to delete instance');
     }
   }
+
+  Future<void> startInstance(String instanceId) async {
+    final response = await http.get(
+      Uri.parse('/api/instance/$instanceId?action=start'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return;
+    } else {
+      throw Exception('Failed to start instance');
+    }
+  }
+
+  Future<void> stopInstance(String instanceId) async {
+    final response = await http.get(
+      Uri.parse('/api/instance/$instanceId?action=stop'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return;
+    } else {
+      throw Exception('Failed to stop instance');
+    }
+  }
 }
