@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/colors.dart';
 import '../services/instance_service.dart';
+import '../services/project_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class InstancePage extends StatefulWidget {
@@ -16,10 +17,12 @@ class _InstancePageState extends State<InstancePage> {
   bool _sortAscending = true;
   int _sortColumnIndex = 0;
 
-  List<Map<String, dynamic>> instances = [];
+  List<Instance> instances = [];
+  List<Project> projects = [];
 
   final _storage = const FlutterSecureStorage();
   late InstanceService _instanceService;
+  late ProjectService _projectService;
   bool _isLoading = true;
 
   @override
@@ -36,7 +39,6 @@ class _InstancePageState extends State<InstancePage> {
     }
 
     _projectService = ProjectService(token: token);
-
     _instanceService = InstanceService(token: token);
     
     try {
@@ -138,8 +140,8 @@ class _InstancePageState extends State<InstancePage> {
                                 _sortColumnIndex = columnIndex;
                                 _sortAscending = ascending;
                                 instances.sort((a, b) {
-                                  final DateTime aDate = a['createdAt'] as DateTime;
-                                  final DateTime bDate = b['createdAt'] as DateTime;
+                                  final DateTime aDate = DateTime.parse(a.createdAt);
+                                  final DateTime bDate = DateTime.parse(b.createdAt);
                                   return ascending
                                       ? aDate.compareTo(bDate)
                                       : bDate.compareTo(aDate);
@@ -160,8 +162,8 @@ class _InstancePageState extends State<InstancePage> {
                                 _sortColumnIndex = columnIndex;
                                 _sortAscending = ascending;
                                 instances.sort((a, b) {
-                                  final String aStatus = a['status'] as String;
-                                  final String bStatus = b['status'] as String;
+                                  final String aStatus = a.status;
+                                  final String bStatus = b.status;
                                   return ascending
                                       ? aStatus.compareTo(bStatus)
                                       : bStatus.compareTo(aStatus);
@@ -177,36 +179,17 @@ class _InstancePageState extends State<InstancePage> {
                           ),
                           const DataColumn(
                             label: Text(
-                              'OS',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const DataColumn(
-                            label: Text(
-                              'Plugin',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const DataColumn(
-                            label: Text(
                               'Actions',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
-                        rows: instances
-                            .where((instance) =>
-                                selectedProjectId == null ||
-                                instance['projectId'] == selectedProjectId)
-                            .map((instance) {
+                        rows: instances.map((instance) {
                           return DataRow(
                             cells: [
-                              DataCell(Text(_formatDateTime(
-                                  instance['createdAt'] as DateTime))),
-                              DataCell(_buildStatusCell(instance['status'])),
-                              DataCell(Text(instance['memoryUsage'])),
-                              DataCell(Text(instance['os'])),
-                              DataCell(Text(instance['plugin'])),
+                              DataCell(Text(_formatDateTime(DateTime.parse(instance.createdAt)))),
+                              DataCell(_buildStatusCell(instance.status)),
+                              DataCell(Text('${instance.memory} MB')),
                               DataCell(_buildActionButtons(instance)),
                             ],
                           );
@@ -266,8 +249,8 @@ class _InstancePageState extends State<InstancePage> {
     );
   }
 
-  Widget _buildActionButtons(Map<String, dynamic> instance) {
-    final bool isRunning = instance['status'].toString().toLowerCase() == 'running';
+  Widget _buildActionButtons(Instance instance) {
+    final bool isRunning = instance.status.toString().toLowerCase() == 'running';
     
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -283,7 +266,7 @@ class _InstancePageState extends State<InstancePage> {
               ),
             ),
             onPressed: () {
-              context.go('/session/${instance['id']}');
+              context.go('/session/${instance.id}');
             },
             child: const Text('Open'),
           ),
@@ -300,7 +283,7 @@ class _InstancePageState extends State<InstancePage> {
           ),
           onPressed: () async {
             try {
-              await _instanceService.startInstance(instance['id']);
+              await _instanceService.startInstance(instance.id);
               // Refresh instances after starting
               final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
               setState(() {
@@ -329,7 +312,7 @@ class _InstancePageState extends State<InstancePage> {
             ),
             onPressed: () async {
               try {
-                await _instanceService.stopInstance(instance['id']);
+                await _instanceService.stopInstance(instance.id);
                 // Refresh instances after stopping
                 final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
                 setState(() {
@@ -371,7 +354,7 @@ class _InstancePageState extends State<InstancePage> {
                     onPressed: () async {
                       Navigator.pop(context);
                       try {
-                        await _instanceService.deleteInstance(instance['id']);
+                        await _instanceService.deleteInstance(instance.id);
                         // Refresh instances after deletion
                         final updatedInstances = await _instanceService.getInstances(selectedProjectId!);
                         setState(() {

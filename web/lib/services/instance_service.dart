@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Instance {
   final String id;
@@ -8,6 +9,16 @@ class Instance {
   final String updatedAt;
 
   Instance({required this.id, required this.status, required this.memory, required this.createdAt, required this.updatedAt});
+
+  factory Instance.fromJson(Map<String, dynamic> json) {
+    return Instance(
+      id: json['id'],
+      status: json['status'],
+      memory: json['memory'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+    );
+  }
 }
 
 class InstanceService {
