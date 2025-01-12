@@ -12,7 +12,7 @@ class Instance {
 
   factory Instance.fromJson(Map<String, dynamic> json) {
     return Instance(
-      id: json['id'],
+      id: json['instance_id'],
       status: json['status'],
       memory: json['memory'],
       createdAt: json['created_at'],

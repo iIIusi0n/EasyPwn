@@ -6,6 +6,7 @@ class TerminalService {
   Function(dynamic)? onData;
   bool isConnected = false;
   String? lastUrl;
+  String? token;
   final StreamController<bool> _connectionStatusController = StreamController<bool>.broadcast();
 
   Stream<bool> get connectionStatus => _connectionStatusController.stream;
@@ -13,7 +14,14 @@ class TerminalService {
   void connect(String url) {
     lastUrl = url;
     try {
-      channel = WebSocketChannel.connect(Uri.parse(url));
+      final Uri uri = Uri.parse(url);
+      final Map<String, String> queryParams = Map.from(uri.queryParameters);
+      if (token != null) {
+        queryParams['token'] = token!;
+      }
+      final authenticatedUri = uri.replace(queryParameters: queryParams);
+      
+      channel = WebSocketChannel.connect(authenticatedUri);
       isConnected = true;
       _connectionStatusController.add(true);
 

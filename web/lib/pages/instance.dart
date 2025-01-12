@@ -6,7 +6,8 @@ import '../services/project_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class InstancePage extends StatefulWidget {
-  const InstancePage({super.key});
+  final String? initialProjectId;
+  const InstancePage({super.key, this.initialProjectId});
 
   @override
   State<InstancePage> createState() => _InstancePageState();
@@ -23,11 +24,11 @@ class _InstancePageState extends State<InstancePage> {
   final _storage = const FlutterSecureStorage();
   late InstanceService _instanceService;
   late ProjectService _projectService;
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    selectedProjectId = widget.initialProjectId;
     _initializeData();
   }
 
@@ -48,9 +49,9 @@ class _InstancePageState extends State<InstancePage> {
 
       if (mounted) {
         setState(() {
-          projects = futures[0] as List<Project>;
-          _isLoading = false;
+          projects = futures[0];
         });
+        _refreshInstances();
       }
     } catch (e) {
       if (mounted) context.go('/login');

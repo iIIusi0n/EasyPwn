@@ -15,6 +15,11 @@ type Instance struct {
 	ContainerID string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+
+	Status              string
+	MemoryUsage         int
+	LastStatusUpdatedAt time.Time
+	LastMemoryUpdatedAt time.Time
 }
 
 func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, error) {
@@ -175,11 +180,27 @@ func (i *Instance) ResizeTTY(ctx context.Context, execID string, height, width u
 }
 
 func (i *Instance) GetMemoryUsage(ctx context.Context) (int, error) {
-	return getContainerMemory(ctx, cli, i.ContainerID)
+	if i.LastMemoryUpdatedAt.Add(1 * time.Minute).Before(time.Now()) {
+		memory, err := getContainerMemory(ctx, cli, i.ContainerID)
+		if err != nil {
+			return 0, err
+		}
+		i.MemoryUsage = memory
+		i.LastMemoryUpdatedAt = time.Now()
+	}
+	return i.MemoryUsage, nil
 }
 
 func (i *Instance) GetStatus(ctx context.Context) (string, error) {
-	return getContainerStatus(ctx, cli, i.ContainerID)
+	if i.LastStatusUpdatedAt.Add(1 * time.Minute).Before(time.Now()) {
+		status, err := getContainerStatus(ctx, cli, i.ContainerID)
+		if err != nil {
+			return "", err
+		}
+		i.Status = status
+		i.LastStatusUpdatedAt = time.Now()
+	}
+	return i.Status, nil
 }
 
 func (i *Instance) Start(ctx context.Context) error {

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	authjwt "easypwn/internal/pkg/auth"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,7 +39,21 @@ func InstanceAuthMiddleware(projectClient pb.ProjectClient, instanceClient pb.In
 			return
 		}
 
-		if projectInfo.UserId != c.MustGet("user_id").(string) {
+		token := c.Query("token")
+		if token != "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		user, err := authjwt.Decode(token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		if user.UserID != projectInfo.UserId {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return

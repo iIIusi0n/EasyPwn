@@ -26,6 +26,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
     volumes:
       - easypwn_data:/var/lib/easypwn
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - chatbot
       - mailer

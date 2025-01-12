@@ -340,9 +340,9 @@ class _ProjectPageState extends State<ProjectPage> {
           ),
           onPressed: () async {
             try {
-              final instance = await _instanceService.createInstance(project.id);
+              final _ = await _instanceService.createInstance(project.id);
               if (mounted) {
-                context.go('/instances');
+                context.go('/instances', extra: project.id);
               }
             } catch (e) {
               if (mounted) {

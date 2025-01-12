@@ -56,7 +56,9 @@ final router = GoRouter(
         ),
         GoRoute(
           path: '/instances',
-          builder: (context, state) => const InstancePage(),
+          builder: (context, state) => InstancePage(
+            initialProjectId: state.extra as String?,
+          ),
         ),
         GoRoute(
           path: '/session/:id',
