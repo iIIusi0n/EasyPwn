@@ -38,6 +38,23 @@ func (s *InstanceService) GetInstance(ctx context.Context, req *pb.GetInstanceRe
 	}, nil
 }
 
+func (s *InstanceService) GetInstances(ctx context.Context, req *pb.GetInstancesRequest) (*pb.GetInstancesResponse, error) {
+	instances, err := instance.GetInstances(ctx, data.GetDB(), req.ProjectId)
+	if err != nil {
+		return nil, err
+	}
+
+	responseInstances := []*pb.GetInstanceResponse{}
+	for _, instance := range instances {
+		responseInstances = append(responseInstances, &pb.GetInstanceResponse{
+			InstanceId:  instance.ID,
+			ProjectId:   instance.ProjectID,
+			ContainerId: instance.ContainerID,
+		})
+	}
+	return &pb.GetInstancesResponse{Instances: responseInstances}, nil
+}
+
 func (s *InstanceService) DeleteInstance(ctx context.Context, req *pb.DeleteInstanceRequest) (*pb.DeleteInstanceResponse, error) {
 	instance, err := instance.GetInstance(ctx, data.GetDB(), req.InstanceId)
 	if err != nil {
@@ -66,4 +83,32 @@ func (s *InstanceService) GetInstanceLogs(ctx context.Context, req *pb.GetInstan
 	}
 
 	return &pb.GetInstanceLogsResponse{Logs: logs}, nil
+}
+
+func (s *InstanceService) StopInstance(ctx context.Context, req *pb.StopInstanceRequest) (*pb.StopInstanceResponse, error) {
+	instance, err := instance.GetInstance(ctx, data.GetDB(), req.InstanceId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = instance.Stop()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.StopInstanceResponse{InstanceId: req.InstanceId}, nil
+}
+
+func (s *InstanceService) StartInstance(ctx context.Context, req *pb.StartInstanceRequest) (*pb.StartInstanceResponse, error) {
+	instance, err := instance.GetInstance(ctx, data.GetDB(), req.InstanceId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = instance.Start(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.StartInstanceResponse{InstanceId: req.InstanceId}, nil
 }

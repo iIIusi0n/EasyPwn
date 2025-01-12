@@ -48,9 +48,11 @@ func NewRouter(clients RouterClients) *gin.Engine {
 	{
 		instance.Use(jwtauth.AuthMiddleware())
 
-		instance.GET("")
-		instance.POST("")
-		instance.DELETE("/:id")
+		instance.GET("", GetInstancesHandler(clients.InstanceClient))
+		instance.POST("", CreateInstanceHandler(clients.InstanceClient))
+
+		instance.GET("/:id", ActionInstanceHandler(clients.InstanceClient))
+		instance.DELETE("/:id", DeleteInstanceHandler(clients.InstanceClient))
 	}
 
 	return r

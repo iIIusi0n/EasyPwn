@@ -6,9 +6,16 @@ option go_package = "easypwn/internal/api";
 
 service Instance {
     rpc CreateInstance(CreateInstanceRequest) returns (CreateInstanceResponse) {}
+
     rpc GetInstance(GetInstanceRequest) returns (GetInstanceResponse) {}
+    rpc GetInstances(GetInstancesRequest) returns (GetInstancesResponse) {}
+
     rpc DeleteInstance(DeleteInstanceRequest) returns (DeleteInstanceResponse) {}
+
     rpc GetInstanceLogs(GetInstanceLogsRequest) returns (GetInstanceLogsResponse) {}
+
+    rpc StopInstance(StopInstanceRequest) returns (StopInstanceResponse) {}
+    rpc StartInstance(StartInstanceRequest) returns (StartInstanceResponse) {}
 }
 
 message CreateInstanceRequest {
@@ -27,6 +34,16 @@ message GetInstanceResponse {
     string instance_id = 1;
     string project_id = 2;
     string container_id = 3;
+    string status = 4;
+    int32 memory = 5;
+}
+
+message GetInstancesRequest {
+    string project_id = 1;
+}
+
+message GetInstancesResponse {
+    repeated GetInstanceResponse instances = 1;
 }
 
 message DeleteInstanceRequest {
@@ -44,4 +61,20 @@ message GetInstanceLogsRequest {
 
 message GetInstanceLogsResponse {
     string logs = 1;
+}
+
+message StopInstanceRequest {
+    string instance_id = 1;
+}
+
+message StopInstanceResponse {
+    string instance_id = 1;
+}
+
+message StartInstanceRequest {
+    string instance_id = 1;
+}
+
+message StartInstanceResponse {
+    string instance_id = 1;
 }

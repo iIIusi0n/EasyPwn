@@ -100,6 +100,34 @@ func GetInstance(ctx context.Context, db *sql.DB, id string) (*Instance, error) 
 	return instance, nil
 }
 
+func GetInstances(ctx context.Context, db *sql.DB, projectID string) ([]*Instance, error) {
+	var createdAt, updatedAt string
+	instances := []*Instance{}
+	rows, err := db.Query("SELECT BIN_TO_UUID(id), BIN_TO_UUID(project_id), container_id, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM instance WHERE project_id = UUID_TO_BIN(?)", projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		instance := &Instance{}
+		err := rows.Scan(&instance.ID, &instance.ProjectID, &instance.ContainerID, &createdAt, &updatedAt)
+		if err != nil {
+			return nil, err
+		}
+		instance.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return nil, err
+		}
+		instance.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
+		if err != nil {
+			return nil, err
+		}
+		instances = append(instances, instance)
+	}
+	return instances, nil
+}
+
 func (i *Instance) Stop() error {
 	return stopContainer(context.Background(), cli, i.ContainerID)
 }
@@ -144,4 +172,16 @@ func (i *Instance) Execute(ctx context.Context, command ...string) (ExecInOut, e
 
 func (i *Instance) ResizeTTY(ctx context.Context, execID string, height, width uint) error {
 	return resizeExecTTY(ctx, cli, execID, [2]uint{height, width})
+}
+
+func (i *Instance) GetMemoryUsage(ctx context.Context) (int, error) {
+	return getContainerMemory(ctx, cli, i.ContainerID)
+}
+
+func (i *Instance) GetStatus(ctx context.Context) (string, error) {
+	return getContainerStatus(ctx, cli, i.ContainerID)
+}
+
+func (i *Instance) Start(ctx context.Context) error {
+	return startContainer(ctx, cli, i.ContainerID)
 }
