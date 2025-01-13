@@ -117,7 +117,8 @@ func GetDebuggerSessionHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get instance"})
 			return
 		}
-		handleWebSocketSession(c, ins, true, "gdb", c.MustGet("full_path").(string))
+		fullPath := c.MustGet("full_path").(string)
+		handleWebSocketSession(c, ins, true, "gdb", fullPath)
 	}
 }
 

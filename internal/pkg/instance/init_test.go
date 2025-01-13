@@ -6,6 +6,8 @@ import (
 )
 
 func TestInitImages(t *testing.T) {
+	InitImages()
+
 	imageNames, err := getImageNames(context.Background(), cli)
 	if err != nil {
 		t.Fatal("Failed to get image names: ", err)

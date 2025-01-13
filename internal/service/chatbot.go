@@ -24,7 +24,7 @@ func NewChatbotService(ctx context.Context, openAiApiKey string, instanceClient 
 func (s *ChatbotService) getLogs(ctx context.Context, instanceId string) (string, error) {
 	logs, err := s.instanceClient.GetInstanceLogs(ctx, &pb.GetInstanceLogsRequest{
 		InstanceId: instanceId,
-		Limit:      30,
+		Limit:      50,
 	})
 	if err != nil {
 		return "", err

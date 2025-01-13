@@ -90,7 +90,7 @@ func createContainer(ctx context.Context, cli *client.Client, containerName, ima
 		Tty:   true,
 	}, &container.HostConfig{
 		Binds: []string{
-			fmt.Sprintf("%s:/work", workPath),
+			fmt.Sprintf("%s:/work:rw", workPath),
 		},
 		AutoRemove: autoRemove,
 	}, nil, nil, containerName)
@@ -148,4 +148,30 @@ func resizeExecTTY(ctx context.Context, cli *client.Client, execID string, size 
 		Height: size[0],
 		Width:  size[1],
 	})
+}
+
+func getContainerStatus(ctx context.Context, cli *client.Client, containerID string) (string, error) {
+	container, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return "", err
+	}
+	if container.State.Running {
+		return "running", nil
+	}
+	return "stopped", nil
+}
+
+func getContainerMemory(ctx context.Context, cli *client.Client, containerID string) (int, error) {
+	stats, err := cli.ContainerStats(ctx, containerID, false)
+	if err != nil {
+		return 0, err
+	}
+	defer stats.Body.Close()
+
+	var memoryStats container.StatsResponse
+	if err := json.NewDecoder(stats.Body).Decode(&memoryStats); err != nil {
+		return 0, err
+	}
+
+	return int(memoryStats.MemoryStats.Usage / 1024 / 1024), nil
 }

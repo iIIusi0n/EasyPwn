@@ -11,6 +11,9 @@ import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../services/instance_service.dart';
+import '../services/chatbot_service.dart';
 
 class SessionPage extends StatefulWidget {
   final String id;
@@ -20,9 +23,12 @@ class SessionPage extends StatefulWidget {
   State<SessionPage> createState() => _SessionPageState();
 }
 
-class _SessionPageState extends State<SessionPage> with SingleTickerProviderStateMixin {
+class _SessionPageState extends State<SessionPage>
+    with SingleTickerProviderStateMixin {
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   bool isChatExpanded = true;
-  bool isConnected = true;
+  bool isDebugConnected = true;
+  bool isShellConnected = true;
   final TextEditingController _terminalController = TextEditingController();
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _terminalScrollController = ScrollController();
@@ -32,15 +38,31 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
   final List<ChatMessage> chatMessages = [];
   final FocusNode _chatFocusNode = FocusNode();
 
-  late Terminal terminal;
-  late TerminalController terminalController;
-  final TerminalService terminalService = TerminalService();
-
+  late Terminal debugTerminal;
+  late TerminalController debugTerminalController;
+  late Terminal shellTerminal;
+  late TerminalController shellTerminalController;
+  final TerminalService debugTerminalService = TerminalService();
+  final TerminalService shellTerminalService = TerminalService();
+  late InstanceService _instanceService;
+  late ChatbotService _chatbotService;
   final double minChatWidth = 300;
   final double maxChatWidth = 750;
   double chatWidth = 450;
 
-  late StreamSubscription _connectionSubscription;
+  late StreamSubscription _debugConnectionSubscription;
+  late StreamSubscription _shellConnectionSubscription;
+
+  String memoryUsage = '...';
+
+  Future<void> _updateMemoryUsage() async {
+    final instance = await _instanceService.getInstance(widget.id);
+    if (mounted) {
+      setState(() {
+        memoryUsage = instance.memory.toString();
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -50,69 +72,110 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     chatMessages.add(
       ChatMessage(
         sender: 'System',
-        message: 'Connected to debug session. Type your messages here.',
+        message: 'Connected to AI pwnable assistant. Type your messages here.',
         timestamp: DateTime.now(),
         isSystem: true,
       ),
     );
     _initializeTerminal();
 
-    _connectionSubscription = terminalService.connectionStatus.listen((status) {
+    _debugConnectionSubscription =
+        debugTerminalService.connectionStatus.listen((status) {
       if (mounted) {
         setState(() {
-          isConnected = status;
+          isDebugConnected = status;
         });
       }
     });
+
+    _shellConnectionSubscription =
+        shellTerminalService.connectionStatus.listen((status) {
+      if (mounted) {
+        setState(() {
+          isShellConnected = status;
+        });
+      }
+    });
+
+    _updateMemoryUsage();
   }
 
-  void _initializeTerminal() {
-    terminal = Terminal(
+  Future<void> _initializeTerminal() async {
+    final token = await _storage.read(key: 'token');
+    debugTerminal = Terminal(
       maxLines: 10000,
     );
-    
-    terminalController = TerminalController();
+    shellTerminal = Terminal(
+      maxLines: 10000,
+    );
 
-    terminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/ws');
+    debugTerminalController = TerminalController();
+    shellTerminalController = TerminalController();
 
-    terminalService.onData = (data) {
+    _instanceService = InstanceService(token: token!);
+    _chatbotService = ChatbotService(token: token);
+    debugTerminalService.connect(
+        '${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/debugger/${widget.id}',
+        token);
+    shellTerminalService.connect(
+        '${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/shell/${widget.id}',
+        token);
+
+    debugTerminalService.onData = (data) {
       if (data is List<int>) {
-        terminal.write(const Utf8Decoder().convert(data));
+        debugTerminal.write(const Utf8Decoder().convert(data));
       }
     };
 
-    terminal.onOutput = (data) {
+    shellTerminalService.onData = (data) {
+      if (data is List<int>) {
+        shellTerminal.write(const Utf8Decoder().convert(data));
+      }
+    };
+
+    debugTerminal.onOutput = (data) {
       final encodedData = const Utf8Encoder().convert(data);
-      terminalService.sendCommand(encodedData);
+      debugTerminalService.sendCommand(encodedData);
+    };
+
+    shellTerminal.onOutput = (data) {
+      final encodedData = const Utf8Encoder().convert(data);
+      shellTerminalService.sendCommand(encodedData);
     };
 
     // Handle terminal resize
-    terminal.onResize = (w, h, pw, ph) {
-      final resizeCommand = jsonEncode({
-        'type': 'resize',
-        'cols': w,
-        'rows': h
-      });
-      terminalService.sendCommand(resizeCommand);
+    debugTerminal.onResize = (w, h, pw, ph) {
+      final resizeCommand =
+          jsonEncode({'type': 'resize', 'cols': w, 'rows': h});
+      debugTerminalService.sendCommand(resizeCommand);
+    };
+
+    shellTerminal.onResize = (w, h, pw, ph) {
+      final resizeCommand =
+          jsonEncode({'type': 'resize', 'cols': w, 'rows': h});
+      shellTerminalService.sendCommand(resizeCommand);
     };
   }
 
   @override
   void dispose() {
-    _connectionSubscription.cancel();
+    _debugConnectionSubscription.cancel();
+    _shellConnectionSubscription.cancel();
     _terminalController.dispose();
     _chatController.dispose();
     _terminalScrollController.dispose();
     _chatScrollController.dispose();
     _tabController.dispose();
     _chatFocusNode.dispose();
-    terminalService.dispose();
+    debugTerminalService.dispose();
+    shellTerminalService.dispose();
     super.dispose();
   }
 
-  void _handleChatSubmit(String value) {
+  void _handleChatSubmit(String value) async {
     if (value.isEmpty) return;
 
+    // Add user message
     setState(() {
       chatMessages.add(ChatMessage(
         sender: 'You',
@@ -121,6 +184,45 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
       ));
     });
     _chatController.clear();
+    _scrollToBottom(_chatScrollController);
+
+    try {
+      // Add loading message
+      setState(() {
+        chatMessages.add(ChatMessage(
+          sender: 'Assistant',
+          message: '...',
+          timestamp: DateTime.now(),
+          isLoading: true,
+        ));
+      });
+      _scrollToBottom(_chatScrollController);
+
+      // Get response from API
+      final response = await _chatbotService.getResponse(widget.id, value);
+
+      // Replace loading message with actual response
+      setState(() {
+        chatMessages.removeLast();
+        chatMessages.add(ChatMessage(
+          sender: 'Assistant',
+          message: response,
+          timestamp: DateTime.now(),
+        ));
+      });
+    } catch (e) {
+      // Replace loading message with error
+      setState(() {
+        chatMessages.removeLast();
+        chatMessages.add(ChatMessage(
+          sender: 'System',
+          message: 'Failed to get response: $e',
+          timestamp: DateTime.now(),
+          isSystem: true,
+          isError: true,
+        ));
+      });
+    }
     _scrollToBottom(_chatScrollController);
   }
 
@@ -170,7 +272,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                               controller: _tabController,
                               children: [
                                 _buildDebuggerTab(),
-                                _buildDebuggerTab(),
+                                _buildShellTab(),
                               ],
                             ),
                           ),
@@ -200,7 +302,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                     ),
                   ],
                 ),
-                
+
                 // Chat toggle button
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 100),
@@ -208,11 +310,11 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                   right: isChatExpanded ? chatWidth : 0,
                   top: MediaQuery.of(context).size.height / 2 - 60,
                   child: GestureDetector(
-                    
                     onHorizontalDragUpdate: (details) {
                       if (!isChatExpanded) return;
                       setState(() {
-                        chatWidth = (chatWidth - details.delta.dx).clamp(minChatWidth, maxChatWidth);
+                        chatWidth = (chatWidth - details.delta.dx)
+                            .clamp(minChatWidth, maxChatWidth);
                       });
                     },
                     child: MouseRegion(
@@ -244,7 +346,8 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                             decoration: const ShapeDecoration(
                               color: AppColors.surface,
                               shape: ContinuousRectangleBorder(
-                                side: BorderSide(color: AppColors.border, width: 1.5),
+                                side: BorderSide(
+                                    color: AppColors.border, width: 1.5),
                                 borderRadius: BorderRadius.horizontal(
                                   left: Radius.elliptical(24, 48),
                                 ),
@@ -258,7 +361,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          isChatExpanded 
+                                          isChatExpanded
                                               ? Icons.chevron_right
                                               : Icons.chevron_left,
                                           size: 16,
@@ -281,9 +384,9 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
           ),
 
           // Bottom bar
-          const BottomBar(
-            instanceAddress: 'localhost:8080',
-            memoryUsage: '124MB',
+          BottomBar(
+            instanceId: widget.id,
+            memoryUsage: "$memoryUsage MB",
           ),
         ],
       ),
@@ -296,8 +399,8 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
         Container(
           color: AppColors.surfaceDark,
           child: TerminalView(
-            terminal,
-            controller: terminalController,
+            debugTerminal,
+            controller: debugTerminalController,
             autofocus: true,
             backgroundOpacity: 0.7,
             textStyle: TerminalStyle(
@@ -305,28 +408,28 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
               fontFamily: GoogleFonts.robotoMono().fontFamily!,
             ),
             onSecondaryTapDown: (details, offset) async {
-              final selection = terminalController.selection;
+              final selection = debugTerminalController.selection;
               if (selection != null) {
-                final text = terminal.buffer.getText(selection);
-                terminalController.clearSelection();
+                final text = debugTerminal.buffer.getText(selection);
+                debugTerminalController.clearSelection();
                 await Clipboard.setData(ClipboardData(text: text));
               } else {
                 final data = await Clipboard.getData('text/plain');
                 final text = data?.text;
                 if (text != null) {
-                  terminal.paste(text);
+                  debugTerminal.paste(text);
                 }
               }
             },
           ),
         ),
-
-        if (!isConnected)
+        if (!isDebugConnected)
           Container(
             color: const Color(0xFF2C1F1F).withOpacity(0.7),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1E1E).withOpacity(0.95),
                   borderRadius: BorderRadius.circular(8),
@@ -373,7 +476,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                       width: 100,
                       height: 30,
                       onPressed: () {
-                        terminalService.reconnect();
+                        debugTerminalService.reconnect();
                       },
                       backgroundColor: const Color.fromARGB(255, 196, 73, 73),
                       borderColor: const Color.fromARGB(255, 196, 73, 73),
@@ -384,7 +487,123 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
               ),
             ),
           ),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.logout),
+              iconSize: 20,
+              color: AppColors.textSecondary,
+              onPressed: () {
+                context.go('/instances');
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildShellTab() {
+    return Stack(
+      children: [
+        Container(
+          color: AppColors.surfaceDark,
+          child: TerminalView(
+            shellTerminal,
+            controller: shellTerminalController,
+            autofocus: true,
+            backgroundOpacity: 0.7,
+            textStyle: TerminalStyle(
+              fontSize: 14,
+              fontFamily: GoogleFonts.robotoMono().fontFamily!,
+            ),
+            onSecondaryTapDown: (details, offset) async {
+              final selection = shellTerminalController.selection;
+              if (selection != null) {
+                final text = shellTerminal.buffer.getText(selection);
+                shellTerminalController.clearSelection();
+                await Clipboard.setData(ClipboardData(text: text));
+              } else {
+                final data = await Clipboard.getData('text/plain');
+                final text = data?.text;
+                if (text != null) {
+                  shellTerminal.paste(text);
+                }
+              }
+            },
+          ),
+        ),
+        if (!isShellConnected)
+          Container(
+            color: const Color(0xFF2C1F1F).withOpacity(0.7),
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E1E).withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF433333),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade400,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Connection lost',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    CustomButton(
+                      text: 'Reconnect',
+                      width: 100,
+                      height: 30,
+                      onPressed: () {
+                        shellTerminalService.reconnect();
+                      },
+                      backgroundColor: const Color.fromARGB(255, 196, 73, 73),
+                      borderColor: const Color.fromARGB(255, 196, 73, 73),
+                      textColor: Colors.white70,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         Positioned(
           right: 16,
           bottom: 16,

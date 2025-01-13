@@ -15,6 +15,11 @@ type Instance struct {
 	ContainerID string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+
+	Status              string
+	MemoryUsage         int
+	LastStatusUpdatedAt time.Time
+	LastMemoryUpdatedAt time.Time
 }
 
 func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, error) {
@@ -36,7 +41,8 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 	imageName := fmt.Sprintf("easypwn/%s:%s", osName, pluginName)
 
 	containerName := util.CreateInstanceName()
-	containerID, err := createContainer(ctx, cli, containerName, imageName, proj.FilePath, true)
+
+	containerID, err := createContainer(ctx, cli, containerName, imageName, proj.FilePath, false)
 	if err != nil {
 		return nil, err
 	}
@@ -100,12 +106,45 @@ func GetInstance(ctx context.Context, db *sql.DB, id string) (*Instance, error) 
 	return instance, nil
 }
 
+func GetInstances(ctx context.Context, db *sql.DB, projectID string) ([]*Instance, error) {
+	var createdAt, updatedAt string
+	instances := []*Instance{}
+	rows, err := db.Query("SELECT BIN_TO_UUID(id), BIN_TO_UUID(project_id), container_id, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ'), DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') FROM instance WHERE project_id = UUID_TO_BIN(?)", projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		instance := &Instance{}
+		err := rows.Scan(&instance.ID, &instance.ProjectID, &instance.ContainerID, &createdAt, &updatedAt)
+		if err != nil {
+			return nil, err
+		}
+		instance.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return nil, err
+		}
+		instance.UpdatedAt, err = time.Parse(time.RFC3339, updatedAt)
+		if err != nil {
+			return nil, err
+		}
+		instances = append(instances, instance)
+	}
+	return instances, nil
+}
+
 func (i *Instance) Stop() error {
 	return stopContainer(context.Background(), cli, i.ContainerID)
 }
 
 func (i *Instance) Delete(ctx context.Context, db *sql.DB) error {
 	err := i.Stop()
+	if err != nil {
+		return err
+	}
+
+	err = removeContainer(ctx, cli, i.ContainerID)
 	if err != nil {
 		return err
 	}
@@ -144,4 +183,32 @@ func (i *Instance) Execute(ctx context.Context, command ...string) (ExecInOut, e
 
 func (i *Instance) ResizeTTY(ctx context.Context, execID string, height, width uint) error {
 	return resizeExecTTY(ctx, cli, execID, [2]uint{height, width})
+}
+
+func (i *Instance) GetMemoryUsage(ctx context.Context) (int, error) {
+	if i.LastMemoryUpdatedAt.Add(1 * time.Minute).Before(time.Now()) {
+		memory, err := getContainerMemory(ctx, cli, i.ContainerID)
+		if err != nil {
+			return 0, err
+		}
+		i.MemoryUsage = memory
+		i.LastMemoryUpdatedAt = time.Now()
+	}
+	return i.MemoryUsage, nil
+}
+
+func (i *Instance) GetStatus(ctx context.Context) (string, error) {
+	if i.LastStatusUpdatedAt.Add(1 * time.Minute).Before(time.Now()) {
+		status, err := getContainerStatus(ctx, cli, i.ContainerID)
+		if err != nil {
+			return "", err
+		}
+		i.Status = status
+		i.LastStatusUpdatedAt = time.Now()
+	}
+	return i.Status, nil
+}
+
+func (i *Instance) Start(ctx context.Context) error {
+	return startContainer(ctx, cli, i.ContainerID)
 }

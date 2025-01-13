@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/project_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import '../services/instance_service.dart';
 
 class ProjectPage extends StatefulWidget {
   const ProjectPage({super.key});
@@ -25,6 +26,7 @@ class _ProjectPageState extends State<ProjectPage> {
 
   final _storage = const FlutterSecureStorage();
   late ProjectService _projectService;
+  late InstanceService _instanceService;
   List<Project> projects = [];
   List<Os> osList = [];
   List<Plugin> pluginList = [];
@@ -44,6 +46,7 @@ class _ProjectPageState extends State<ProjectPage> {
     }
 
     _projectService = ProjectService(token: token);
+    _instanceService = InstanceService(token: token);
     
     try {
       final futures = await Future.wait([
@@ -335,8 +338,19 @@ class _ProjectPageState extends State<ProjectPage> {
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          onPressed: () {
-            // TODO: Create new session
+          onPressed: () async {
+            try {
+              final _ = await _instanceService.createInstance(project.id);
+              if (mounted) {
+                context.go('/instances', extra: project.id);
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to create instance')),
+                );
+              }
+            }
           },
           child: const Text('New Instance'),
         ),
@@ -370,6 +384,9 @@ class _ProjectPageState extends State<ProjectPage> {
                     child: const Text('Delete'),
                   ),
                 ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             );
           },
