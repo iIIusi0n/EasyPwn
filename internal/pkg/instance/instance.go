@@ -73,6 +73,11 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 		return nil, err
 	}
 
+	_, err = executeCommand(ctx, cli, containerID, "/bin/bash", "-c", fmt.Sprintf("chmod +x /work/%s", proj.FileName))
+	if err != nil {
+		return nil, err
+	}
+
 	return &Instance{
 		ID:          instanceID,
 		ProjectID:   projectID,
