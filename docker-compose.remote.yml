@@ -1,0 +1,154 @@
+services:
+  web:
+    image: ghcr.io/iiiusi0n/easypwn/web
+
+  api-gateway:
+    image: ghcr.io/iiiusi0n/easypwn/api-gateway
+    environment:
+      - API_LISTEN_PORT=${API_LISTEN_PORT}
+      - USER_LISTEN_HOST=${USER_LISTEN_HOST}
+      - USER_LISTEN_PORT=${USER_LISTEN_PORT}
+      - MAILER_LISTEN_HOST=${MAILER_LISTEN_HOST}
+      - MAILER_LISTEN_PORT=${MAILER_LISTEN_PORT}
+      - PROJECT_LISTEN_HOST=${PROJECT_LISTEN_HOST}
+      - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
+      - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - CHATBOT_LISTEN_HOST=${CHATBOT_LISTEN_HOST}
+      - CHATBOT_LISTEN_PORT=${CHATBOT_LISTEN_PORT}
+      - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST_MOUNT_PATH=${DOCKER_HOST_MOUNT_PATH}
+    volumes:
+      - /tmp/easypwn-data:/var/lib/easypwn
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - chatbot
+      - mailer
+      - user-service
+      - project-service
+      - instance-service
+
+  chatbot:
+    image: ghcr.io/iiiusi0n/easypwn/chatbot
+    environment:
+      - CHATBOT_OPENAI_API_KEY=${CHATBOT_OPENAI_API_KEY}
+      - CHATBOT_LISTEN_PORT=${CHATBOT_LISTEN_PORT}
+      - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - instance-service
+
+  mailer:
+    image: ghcr.io/iiiusi0n/easypwn/mailer
+    environment:
+      - MAILER_LISTEN_PORT=${MAILER_LISTEN_PORT}
+      - MAILER_SMTP_HOST=${MAILER_SMTP_HOST}
+      - MAILER_SMTP_TLS_PORT=${MAILER_SMTP_TLS_PORT}
+      - MAILER_SMTP_USER=${MAILER_SMTP_USER}
+      - MAILER_SMTP_PASS=${MAILER_SMTP_PASS}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+
+  user-service:
+    image: ghcr.io/iiiusi0n/easypwn/user-service
+    environment:
+      - USER_LISTEN_PORT=${USER_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+
+  project-service:
+    image: ghcr.io/iiiusi0n/easypwn/project-service
+    environment:
+      - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+      - DOCKER_HOST_MOUNT_PATH=${DOCKER_HOST_MOUNT_PATH}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/easypwn-data:/var/lib/easypwn
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+
+  instance-service:
+    image: ghcr.io/iiiusi0n/easypwn/instance-service
+    environment:
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+      - DOCKER_HOST_MOUNT_PATH=${DOCKER_HOST_MOUNT_PATH}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/easypwn-data:/var/lib/easypwn
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+
+  instance-streaming-service:
+    image: ghcr.io/iiiusi0n/easypwn/instance-streaming-service
+    environment:
+      - INSTANCE_STREAMING_SERVICE_LISTEN_PORT=${INSTANCE_STREAMING_SERVICE_LISTEN_PORT}
+      - INSTANCE_LISTEN_HOST=${INSTANCE_LISTEN_HOST}
+      - INSTANCE_LISTEN_PORT=${INSTANCE_LISTEN_PORT}
+      - PROJECT_LISTEN_HOST=${PROJECT_LISTEN_HOST}
+      - PROJECT_LISTEN_PORT=${PROJECT_LISTEN_PORT}
+      - AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+      - DOCKER_HOST_MOUNT_PATH=${DOCKER_HOST_MOUNT_PATH}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/easypwn-data:/var/lib/easypwn
+    depends_on:
+      - project-service
+      - instance-service
+
+  mysqldb:
+    image: mysql:9.1
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=UTC
+    volumes:
+      - ./assets/mysql:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "--password=${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    image: caddy:2.7.4-alpine
+    environment:
+      - CADDY_DOMAIN=${CADDY_DOMAIN}
+      - INSTANCE_STREAMING_SERVICE_LISTEN_HOST=${INSTANCE_STREAMING_SERVICE_LISTEN_HOST}
+      - INSTANCE_STREAMING_SERVICE_LISTEN_PORT=${INSTANCE_STREAMING_SERVICE_LISTEN_PORT}
+      - API_LISTEN_HOST=${API_LISTEN_HOST}
+      - API_LISTEN_PORT=${API_LISTEN_PORT}
+      - WEB_LISTEN_HOST=${WEB_LISTEN_HOST}
+    volumes:
+      - ./assets/caddy:/etc/caddy
+    ports:
+      - 80:80
+      - 443:443
+
+volumes:
+  mysql_data:
