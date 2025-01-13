@@ -11,14 +11,13 @@ class TerminalService {
 
   Stream<bool> get connectionStatus => _connectionStatusController.stream;
 
-  void connect(String url) {
+  void connect(String url, String token) {
     lastUrl = url;
+    this.token = token;
     try {
       final Uri uri = Uri.parse(url);
       final Map<String, String> queryParams = Map.from(uri.queryParameters);
-      if (token != null) {
-        queryParams['token'] = token!;
-      }
+      queryParams['token'] = token;
       final authenticatedUri = uri.replace(queryParameters: queryParams);
       
       channel = WebSocketChannel.connect(authenticatedUri);
@@ -48,7 +47,7 @@ class TerminalService {
 
   void reconnect() {
     if (lastUrl != null) {
-      connect(lastUrl!);
+      connect(lastUrl!, token!);
     }
   }
 

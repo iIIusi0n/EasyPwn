@@ -41,7 +41,7 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 	imageName := fmt.Sprintf("easypwn/%s:%s", osName, pluginName)
 
 	containerName := util.CreateInstanceName()
-	containerID, err := createContainer(ctx, cli, containerName, imageName, proj.FilePath, true)
+	containerID, err := createContainer(ctx, cli, containerName, imageName, proj.FilePath, false)
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +139,11 @@ func (i *Instance) Stop() error {
 
 func (i *Instance) Delete(ctx context.Context, db *sql.DB) error {
 	err := i.Stop()
+	if err != nil {
+		return err
+	}
+
+	err = removeContainer(ctx, cli, i.ContainerID)
 	if err != nil {
 		return err
 	}

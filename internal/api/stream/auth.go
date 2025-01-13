@@ -40,7 +40,7 @@ func InstanceAuthMiddleware(projectClient pb.ProjectClient, instanceClient pb.In
 		}
 
 		token := c.Query("token")
-		if token != "" {
+		if token == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
