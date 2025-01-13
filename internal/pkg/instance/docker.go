@@ -89,6 +89,7 @@ func createContainer(ctx context.Context, cli *client.Client, containerName, ima
 		Cmd:   []string{"/bin/bash"},
 		Tty:   true,
 	}, &container.HostConfig{
+		Privileged: true,
 		Binds: []string{
 			fmt.Sprintf("%s:/work:rw", workPath),
 		},
