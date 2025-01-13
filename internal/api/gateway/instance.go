@@ -127,6 +127,14 @@ func DeleteInstanceHandler(instanceClient pb.InstanceClient) gin.HandlerFunc {
 func ActionInstanceHandler(instanceClient pb.InstanceClient) gin.HandlerFunc {
 	ctx := context.Background()
 
+	type InstanceResponse struct {
+		InstanceId string `json:"instance_id"`
+		Status     string `json:"status"`
+		Memory     int    `json:"memory"`
+		CreatedAt  string `json:"created_at"`
+		UpdatedAt  string `json:"updated_at"`
+	}
+
 	return func(c *gin.Context) {
 		instanceId := c.Param("id")
 		if instanceId == "" {
@@ -136,7 +144,32 @@ func ActionInstanceHandler(instanceClient pb.InstanceClient) gin.HandlerFunc {
 
 		action := c.Query("action")
 		if action == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Action is required"})
+			ins, err := instance.GetInstance(ctx, data.GetDB(), instanceId)
+			if err != nil {
+				log.Printf("Failed to get instance: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get instance"})
+				return
+			}
+
+			status, err := ins.GetStatus(ctx)
+			if err != nil {
+				log.Printf("Failed to get instance status: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get instance status"})
+				return
+			}
+			memory, err := ins.GetMemoryUsage(ctx)
+			if err != nil {
+				log.Printf("Failed to get instance memory usage: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get instance memory usage"})
+				return
+			}
+			c.JSON(http.StatusOK, InstanceResponse{
+				InstanceId: ins.ID,
+				Status:     status,
+				Memory:     memory,
+				CreatedAt:  ins.CreatedAt.Format(time.RFC3339),
+				UpdatedAt:  ins.UpdatedAt.Format(time.RFC3339),
+			})
 			return
 		}
 

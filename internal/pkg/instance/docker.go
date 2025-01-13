@@ -90,7 +90,7 @@ func createContainer(ctx context.Context, cli *client.Client, containerName, ima
 		Tty:   true,
 	}, &container.HostConfig{
 		Binds: []string{
-			fmt.Sprintf("%s:/work", workPath),
+			fmt.Sprintf("%s:/work:rw", workPath),
 		},
 		AutoRemove: autoRemove,
 	}, nil, nil, containerName)

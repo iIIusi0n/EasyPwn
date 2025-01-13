@@ -12,7 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+import '../services/instance_service.dart';
 class SessionPage extends StatefulWidget {
   final String id;
   const SessionPage({super.key, required this.id});
@@ -22,7 +22,7 @@ class SessionPage extends StatefulWidget {
 }
 
 class _SessionPageState extends State<SessionPage> with SingleTickerProviderStateMixin {
-  final FlutterSecureStorage _storage = FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   bool isChatExpanded = true;
   bool isDebugConnected = true;
   bool isShellConnected = true;
@@ -41,13 +41,24 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
   late TerminalController shellTerminalController;
   final TerminalService debugTerminalService = TerminalService();
   final TerminalService shellTerminalService = TerminalService();
-
+  late InstanceService _instanceService;
   final double minChatWidth = 300;
   final double maxChatWidth = 750;
   double chatWidth = 450;
 
   late StreamSubscription _debugConnectionSubscription;
   late StreamSubscription _shellConnectionSubscription;
+
+  String memoryUsage = '...';
+
+  Future<void> _updateMemoryUsage() async {
+    final instance = await _instanceService.getInstance(widget.id);
+    if (mounted) {
+      setState(() {
+        memoryUsage = instance.memory.toString();
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -79,6 +90,8 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
         });
       }
     });
+
+    _updateMemoryUsage();
   }
 
   Future<void> _initializeTerminal() async {
@@ -93,7 +106,9 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     debugTerminalController = TerminalController();
     shellTerminalController = TerminalController();
 
-    debugTerminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/debugger/${widget.id}', token!);
+    _instanceService = InstanceService(token: token!);
+
+    debugTerminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/debugger/${widget.id}', token);
     shellTerminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/shell/${widget.id}', token);
 
     debugTerminalService.onData = (data) {
@@ -324,9 +339,9 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
           ),
 
           // Bottom bar
-          const BottomBar(
-            instanceAddress: 'localhost:8080',
-            memoryUsage: '124MB',
+          BottomBar(
+            instanceId: widget.id,
+            memoryUsage: "$memoryUsage MB",
           ),
         ],
       ),

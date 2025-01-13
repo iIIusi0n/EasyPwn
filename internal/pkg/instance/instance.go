@@ -41,6 +41,7 @@ func NewInstance(ctx context.Context, db *sql.DB, projectID string) (*Instance, 
 	imageName := fmt.Sprintf("easypwn/%s:%s", osName, pluginName)
 
 	containerName := util.CreateInstanceName()
+
 	containerID, err := createContainer(ctx, cli, containerName, imageName, proj.FilePath, false)
 	if err != nil {
 		return nil, err

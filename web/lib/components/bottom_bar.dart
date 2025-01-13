@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 
 class BottomBar extends StatelessWidget {
-  final String instanceAddress;
+  final String instanceId;
   final String memoryUsage;
 
   const BottomBar({
     super.key,
-    required this.instanceAddress,
+    required this.instanceId,
     required this.memoryUsage,
   });
 
@@ -25,7 +25,7 @@ class BottomBar extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'Connected to: $instanceAddress',
+            'Connected to instance: $instanceId',
             style: TextStyle(
               color: AppColors.greyShade(600),
               fontSize: 12,

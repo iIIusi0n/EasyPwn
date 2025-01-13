@@ -42,6 +42,21 @@ class InstanceService {
     }
   }
 
+  Future<Instance> getInstance(String instanceId) async {
+    final response = await http.get(
+      Uri.parse('/api/instance/$instanceId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Instance.fromJson(data);
+    } else {
+      throw Exception('Failed to get instance');
+    }
+  }
+
   Future<Instance> createInstance(String projectId) async {
     final response = await http.post(
       Uri.parse('/api/instance?project_id=$projectId'),
