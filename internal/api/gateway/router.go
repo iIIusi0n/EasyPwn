@@ -64,6 +64,8 @@ func NewRouter(clients RouterClients) *gin.Engine {
 
 		instance.GET("/:id", ActionInstanceHandler(clients.InstanceClient))
 		instance.DELETE("/:id", DeleteInstanceHandler(clients.InstanceClient))
+
+		instance.POST("/:id/chat", ChatInstanceHandler(clients.ChatbotClient))
 	}
 
 	return r

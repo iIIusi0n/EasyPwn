@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	pb "easypwn/internal/api"
 	"easypwn/internal/data"
@@ -81,6 +82,7 @@ func (s *InstanceService) GetInstanceLogs(ctx context.Context, req *pb.GetInstan
 	if err != nil {
 		return nil, err
 	}
+	logs = strings.Join(strings.Fields(logs), " ")
 
 	return &pb.GetInstanceLogsResponse{Logs: logs}, nil
 }

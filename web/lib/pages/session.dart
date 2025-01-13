@@ -13,6 +13,8 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/instance_service.dart';
+import '../services/chatbot_service.dart';
+
 class SessionPage extends StatefulWidget {
   final String id;
   const SessionPage({super.key, required this.id});
@@ -21,7 +23,8 @@ class SessionPage extends StatefulWidget {
   State<SessionPage> createState() => _SessionPageState();
 }
 
-class _SessionPageState extends State<SessionPage> with SingleTickerProviderStateMixin {
+class _SessionPageState extends State<SessionPage>
+    with SingleTickerProviderStateMixin {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   bool isChatExpanded = true;
   bool isDebugConnected = true;
@@ -42,6 +45,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
   final TerminalService debugTerminalService = TerminalService();
   final TerminalService shellTerminalService = TerminalService();
   late InstanceService _instanceService;
+  late ChatbotService _chatbotService;
   final double minChatWidth = 300;
   final double maxChatWidth = 750;
   double chatWidth = 450;
@@ -68,14 +72,15 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     chatMessages.add(
       ChatMessage(
         sender: 'System',
-        message: 'Connected to debug session. Type your messages here.',
+        message: 'Connected to AI pwnable assistant. Type your messages here.',
         timestamp: DateTime.now(),
         isSystem: true,
       ),
     );
     _initializeTerminal();
 
-    _debugConnectionSubscription = debugTerminalService.connectionStatus.listen((status) {
+    _debugConnectionSubscription =
+        debugTerminalService.connectionStatus.listen((status) {
       if (mounted) {
         setState(() {
           isDebugConnected = status;
@@ -83,7 +88,8 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
       }
     });
 
-    _shellConnectionSubscription = shellTerminalService.connectionStatus.listen((status) {
+    _shellConnectionSubscription =
+        shellTerminalService.connectionStatus.listen((status) {
       if (mounted) {
         setState(() {
           isShellConnected = status;
@@ -102,14 +108,18 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     shellTerminal = Terminal(
       maxLines: 10000,
     );
-    
+
     debugTerminalController = TerminalController();
     shellTerminalController = TerminalController();
 
     _instanceService = InstanceService(token: token!);
-
-    debugTerminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/debugger/${widget.id}', token);
-    shellTerminalService.connect('${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/shell/${widget.id}', token);
+    _chatbotService = ChatbotService(token: token);
+    debugTerminalService.connect(
+        '${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/debugger/${widget.id}',
+        token);
+    shellTerminalService.connect(
+        '${Uri.base.scheme == 'https' ? 'wss' : 'ws'}://${Uri.base.host}:${Uri.base.port}/api/stream/session/shell/${widget.id}',
+        token);
 
     debugTerminalService.onData = (data) {
       if (data is List<int>) {
@@ -135,20 +145,14 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
 
     // Handle terminal resize
     debugTerminal.onResize = (w, h, pw, ph) {
-      final resizeCommand = jsonEncode({
-        'type': 'resize',
-        'cols': w,
-        'rows': h
-      });
+      final resizeCommand =
+          jsonEncode({'type': 'resize', 'cols': w, 'rows': h});
       debugTerminalService.sendCommand(resizeCommand);
     };
 
     shellTerminal.onResize = (w, h, pw, ph) {
-      final resizeCommand = jsonEncode({
-        'type': 'resize',
-        'cols': w,
-        'rows': h
-      });
+      final resizeCommand =
+          jsonEncode({'type': 'resize', 'cols': w, 'rows': h});
       shellTerminalService.sendCommand(resizeCommand);
     };
   }
@@ -168,9 +172,10 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
     super.dispose();
   }
 
-  void _handleChatSubmit(String value) {
+  void _handleChatSubmit(String value) async {
     if (value.isEmpty) return;
 
+    // Add user message
     setState(() {
       chatMessages.add(ChatMessage(
         sender: 'You',
@@ -179,6 +184,45 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
       ));
     });
     _chatController.clear();
+    _scrollToBottom(_chatScrollController);
+
+    try {
+      // Add loading message
+      setState(() {
+        chatMessages.add(ChatMessage(
+          sender: 'Assistant',
+          message: '...',
+          timestamp: DateTime.now(),
+          isLoading: true,
+        ));
+      });
+      _scrollToBottom(_chatScrollController);
+
+      // Get response from API
+      final response = await _chatbotService.getResponse(widget.id, value);
+
+      // Replace loading message with actual response
+      setState(() {
+        chatMessages.removeLast();
+        chatMessages.add(ChatMessage(
+          sender: 'Assistant',
+          message: response,
+          timestamp: DateTime.now(),
+        ));
+      });
+    } catch (e) {
+      // Replace loading message with error
+      setState(() {
+        chatMessages.removeLast();
+        chatMessages.add(ChatMessage(
+          sender: 'System',
+          message: 'Failed to get response: $e',
+          timestamp: DateTime.now(),
+          isSystem: true,
+          isError: true,
+        ));
+      });
+    }
     _scrollToBottom(_chatScrollController);
   }
 
@@ -258,7 +302,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                     ),
                   ],
                 ),
-                
+
                 // Chat toggle button
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 100),
@@ -266,11 +310,11 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                   right: isChatExpanded ? chatWidth : 0,
                   top: MediaQuery.of(context).size.height / 2 - 60,
                   child: GestureDetector(
-                    
                     onHorizontalDragUpdate: (details) {
                       if (!isChatExpanded) return;
                       setState(() {
-                        chatWidth = (chatWidth - details.delta.dx).clamp(minChatWidth, maxChatWidth);
+                        chatWidth = (chatWidth - details.delta.dx)
+                            .clamp(minChatWidth, maxChatWidth);
                       });
                     },
                     child: MouseRegion(
@@ -302,7 +346,8 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                             decoration: const ShapeDecoration(
                               color: AppColors.surface,
                               shape: ContinuousRectangleBorder(
-                                side: BorderSide(color: AppColors.border, width: 1.5),
+                                side: BorderSide(
+                                    color: AppColors.border, width: 1.5),
                                 borderRadius: BorderRadius.horizontal(
                                   left: Radius.elliptical(24, 48),
                                 ),
@@ -316,7 +361,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          isChatExpanded 
+                                          isChatExpanded
                                               ? Icons.chevron_right
                                               : Icons.chevron_left,
                                           size: 16,
@@ -378,13 +423,13 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
             },
           ),
         ),
-
         if (!isDebugConnected)
           Container(
             color: const Color(0xFF2C1F1F).withOpacity(0.7),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1E1E).withOpacity(0.95),
                   borderRadius: BorderRadius.circular(8),
@@ -442,7 +487,6 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
               ),
             ),
           ),
-
         Positioned(
           right: 16,
           bottom: 16,
@@ -465,7 +509,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
       ],
     );
   }
-  
+
   Widget _buildShellTab() {
     return Stack(
       children: [
@@ -496,13 +540,13 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
             },
           ),
         ),
-
         if (!isShellConnected)
           Container(
             color: const Color(0xFF2C1F1F).withOpacity(0.7),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1E1E).withOpacity(0.95),
                   borderRadius: BorderRadius.circular(8),
@@ -560,7 +604,6 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
               ),
             ),
           ),
-
         Positioned(
           right: 16,
           bottom: 16,

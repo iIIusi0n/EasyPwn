@@ -196,3 +196,42 @@ func ActionInstanceHandler(instanceClient pb.InstanceClient) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Instance action performed successfully"})
 	}
 }
+
+func ChatInstanceHandler(chatbotClient pb.ChatbotClient) gin.HandlerFunc {
+	ctx := context.Background()
+
+	type ChatInstanceRequest struct {
+		Message string `json:"message"`
+	}
+
+	type ChatInstanceResponse struct {
+		Response string `json:"response"`
+	}
+
+	return func(c *gin.Context) {
+		var req ChatInstanceRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		instanceId := c.Param("id")
+		if instanceId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Instance ID is required"})
+			return
+		}
+
+		response, err := chatbotClient.GetResponse(ctx, &pb.GetResponseRequest{
+			InstanceId: instanceId,
+			Message:    req.Message,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get response"})
+			return
+		}
+
+		c.JSON(http.StatusOK, ChatInstanceResponse{
+			Response: response.Response,
+		})
+	}
+}

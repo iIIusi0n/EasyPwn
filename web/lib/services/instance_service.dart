@@ -8,7 +8,12 @@ class Instance {
   final String createdAt;
   final String updatedAt;
 
-  Instance({required this.id, required this.status, required this.memory, required this.createdAt, required this.updatedAt});
+  Instance(
+      {required this.id,
+      required this.status,
+      required this.memory,
+      required this.createdAt,
+      required this.updatedAt});
 
   factory Instance.fromJson(Map<String, dynamic> json) {
     return Instance(
@@ -36,7 +41,9 @@ class InstanceService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data == null) return [];
-      return (data as List).map((instance) => Instance.fromJson(instance)).toList();
+      return (data as List)
+          .map((instance) => Instance.fromJson(instance))
+          .toList();
     } else {
       throw Exception('Failed to get instances');
     }
