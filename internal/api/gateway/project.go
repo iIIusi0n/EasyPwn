@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -147,6 +148,8 @@ func CreateProjectHandler(projectClient pb.ProjectClient) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 			return
 		}
+
+		projectDir = strings.Replace(projectDir, "/var/lib/easypwn", dockerHostMountPath, 1)
 
 		res, err := projectClient.CreateProject(context.Background(), &pb.CreateProjectRequest{
 			Name:     req.ProjectName,

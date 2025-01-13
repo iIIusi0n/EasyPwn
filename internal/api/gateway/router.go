@@ -3,9 +3,20 @@ package gateway
 import (
 	pb "easypwn/internal/api"
 	jwtauth "easypwn/internal/pkg/auth"
+	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
+
+var dockerHostMountPath string
+
+func init() {
+	dockerHostMountPath = os.Getenv("DOCKER_HOST_MOUNT_PATH")
+	if dockerHostMountPath == "" {
+		log.Fatalf("DOCKER_HOST_MOUNT_PATH must be set")
+	}
+}
 
 type RouterClients struct {
 	Mailer         pb.MailerClient

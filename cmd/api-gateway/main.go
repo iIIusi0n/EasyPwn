@@ -28,6 +28,8 @@ var (
 
 	chatbotListenHost = os.Getenv("CHATBOT_LISTEN_HOST")
 	chatbotListenPort = os.Getenv("CHATBOT_LISTEN_PORT")
+
+	dockerHostMountPath = os.Getenv("DOCKER_HOST_MOUNT_PATH")
 )
 
 func init() {
@@ -53,6 +55,10 @@ func init() {
 
 	if chatbotListenHost == "" || chatbotListenPort == "" {
 		log.Fatalf("CHATBOT_LISTEN_HOST and CHATBOT_LISTEN_PORT must be set")
+	}
+
+	if dockerHostMountPath == "" {
+		log.Fatalf("DOCKER_HOST_MOUNT_PATH must be set")
 	}
 }
 
