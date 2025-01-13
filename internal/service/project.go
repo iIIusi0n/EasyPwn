@@ -41,8 +41,10 @@ func (s *ProjectService) GetProject(ctx context.Context, req *pb.GetProjectReque
 		Name:      project.Name,
 		UserId:    project.UserID,
 		FilePath:  project.FilePath,
+		FileName:  project.FileName,
 		OsId:      project.OsID,
 		PluginId:  project.PluginID,
+		CreatedAt: project.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 

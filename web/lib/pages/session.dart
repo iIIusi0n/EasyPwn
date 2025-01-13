@@ -213,7 +213,7 @@ class _SessionPageState extends State<SessionPage> with SingleTickerProviderStat
                               controller: _tabController,
                               children: [
                                 _buildDebuggerTab(),
-                                _buildDebuggerTab(),
+                                _buildShellTab(),
                               ],
                             ),
                           ),
